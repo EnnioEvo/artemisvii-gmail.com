@@ -1,2 +1,1 @@
-# artemisvii-gmail.com
-task2
+Task2 Introduction to machine learning
