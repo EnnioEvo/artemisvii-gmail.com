@@ -6,9 +6,9 @@ from progress.bar import IncrementalBar
 
 
 # Data import:
-train_features = pd.read_csv("data/train_features.csv")
-test_features = pd.read_csv("data/test_features.csv")
-train_labels = pd.read_csv("data/train_labels.csv")
+train_features = pd.read_csv("..data/train_features.csv")
+test_features = pd.read_csv("..data/test_features.csv")
+train_labels = pd.read_csv("..data/train_labels.csv")
 
 # Extracting information:
 patient_characteristics = ["pid", "Age"]
