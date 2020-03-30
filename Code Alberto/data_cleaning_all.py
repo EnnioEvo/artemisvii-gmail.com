@@ -6,9 +6,9 @@ from progress.bar import IncrementalBar
 
 
 # Data import:
-train_features = pd.read_csv("..data/train_features.csv")
-test_features = pd.read_csv("..data/test_features.csv")
-train_labels = pd.read_csv("..data/train_labels.csv")
+train_features = pd.read_csv("../data/train_features.csv")
+test_features = pd.read_csv("../data/test_features.csv")
+train_labels = pd.read_csv("../data/train_labels.csv")
 
 # Extracting information:
 patient_characteristics = ["pid", "Age"]
@@ -36,6 +36,9 @@ def VS_imputation(data_set, N_patients, vital_signs, hours_obs):
         ii = 0
         for VS in vital_signs:
             bool_val = nan_matrix[VS].iloc[patient*hours_obs:patient*hours_obs+hours_obs]
+            bool_val_array = np.array(bool_val)
+            np_prod = np.prod(bool_val_array)
+
             if np.sum(np.array(bool_val)): # There exista a nan
                 if np.prod(np.array(bool_val)): # The entire column have nan
                     VS_feature[VS].iloc[patient*hours_obs:patient*hours_obs+hours_obs] =  VS_mean[ii]*np.ones(h_vect.shape)
