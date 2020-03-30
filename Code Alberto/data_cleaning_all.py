@@ -70,15 +70,15 @@ def tests_cleaning(data_set_tests, tests):
         test_min[ii] = np.nanmin(test_col)
         test_max[ii] = np.nanmax(test_col)
         tezt = '### Tests features processing ### test_feature in analysis: ' + str(ii+1) + '/' + str(len(tests))+' ...Analizing patients...'
-        bar3 = IncrementalBar(tezt, max = shape_idx)
+        #bar3 = IncrementalBar(tezt, max = shape_idx)
         for values_idx in np.arange(shape_idx):
             if np.isnan(test_col[values_idx]):
                 tests_data.iloc[values_idx, ii] = 0
             else:
                 tests_data.iloc[values_idx, ii] = 1 + (test_col[values_idx] - test_min[ii]) / (
                             test_max[ii] - test_min[ii])
-            bar3.next()
-        bar3.finish()
+            #bar3.next()
+        #bar3.finish()
         ii = ii + 1
         print(ii)
         bar2.next()
@@ -113,4 +113,4 @@ print('## CHECK COMPLETE ##')
 submSet = pd.DataFrame(data_set_clean, index=None, columns=col)
 print(submSet.head())
 print("Saved file shape: ", submSet.shape)
-submSet.to_csv('data/data_set_clean_entire_dataset.csv', header=True, index=False)
+submSet.to_csv('../data/data_set_clean_entire_dataset.csv', header=True, index=False)
