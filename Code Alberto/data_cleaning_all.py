@@ -6,8 +6,8 @@ from progress.bar import IncrementalBar
 
 
 # Data import:
-train_features = pd.read_csv("../data/train_features.csv")
-test_features = pd.read_csv("../data/test_features.csv")
+train_features = pd.read_csv("../data/test_features.csv")
+#test_features = pd.read_csv("../data/test_features.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 
 # Extracting information:
@@ -94,7 +94,7 @@ end = time.time()
 print("VS analysis -- Execution time: ", end - start)
 print() 
 print() 
-# tests data cleaning:
+# test data cleaning:
 start = time.time()
 train_features_new_tests= tests_cleaning(train_features, tests)
 end = time.time()
@@ -113,4 +113,4 @@ print('## CHECK COMPLETE ##')
 submSet = pd.DataFrame(data_set_clean, index=None, columns=col)
 print(submSet.head())
 print("Saved file shape: ", submSet.shape)
-submSet.to_csv('../data/data_train_clean_entire_dataset.csv', header=True, index=False)
+submSet.to_csv('../data/data_test_clean_entire_dataset.csv', header=True, index=False)
