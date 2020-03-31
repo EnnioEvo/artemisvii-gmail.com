@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 import math
-from utilities.kernels import LinearKernel, PolynomialKernel, GaussianKernel, PeriodicKernel, LaplacianKernel, SumKernel
+#from utilities.kernels import LinearKernel, PolynomialKernel, GaussianKernel, PeriodicKernel, LaplacianKernel, SumKernel
 
 #from sklearn import svm
 #from sklearn import datasets
@@ -27,7 +27,7 @@ X_temp=[]
 
 # put "227940" in the range function to stop the iteration of the inner "for cycle" exactly at the last row of tha last patient
 for ind1 in range(0, N, 12):
-    print(ind1)
+#    print(ind1)
     for ind2 in range(ind1,ind1+12):
         X_temp=np.array([np.concatenate((X_temp, np.array([data_set_x_train[ind2][:]])), axis=None)])
     X_train[int(ind1/12), :] = X_temp
@@ -38,17 +38,17 @@ print(X_train.shape)
 
 
 #Concatenation of all the data for the 12 hours in data_set_x_test to obtain one single raw for each patient
-X_test=np.zeros((1,37*12))
+N = 15960
+X_test=np.zeros((math.ceil(N/12),37*12))
 X_temp=[]
 
 # put "15960" in the range function to stop the iteration of the inner "for cycle" exactly at the last row of tha last patient
-for ind1 in range(0, 15960 , 12):
+for ind1 in range(0, N , 12):
     for ind2 in range(ind1,ind1+12):
         X_temp=np.array([np.concatenate((X_temp, np.array([data_set_x_test[ind2][:]])), axis=None)])
-    X_test=np.row_stack((X_test,X_temp))
+    X_test[int(ind1/12), :] = X_temp
     X_temp=[]
 
-X_test=X_test[1:, :]
 print(X_test.shape)
 
 #example of just one label
