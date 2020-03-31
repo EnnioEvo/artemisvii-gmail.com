@@ -16,23 +16,23 @@ test_features = pd.read_csv("data/test_features_clean.csv")
 train_labels = pd.read_csv("data/train_labels.csv")
 
 # Informatons on the headers -- Extracting information:
-patient_characteristics = ["Age"] # TIME VARIABLE IS EXCLUDED
-vital_signs = ["Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate"]
-tests = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Temp', 'Hgb', 'HCO3', 'BaseExcess',
-       'Fibrinogen', 'Phosphate', 'WBC', 'Creatinine', 'PaCO2', 'AST', 'FiO2',
-       'Platelets', 'SaO2', 'Glucose', 'Magnesium', 'Potassium', 'Calcium',
-       'Alkalinephos', 'Bilirubin_direct', 'Chloride', 'Hct',
-       'Bilirubin_total', 'TroponinI', 'pH']
+#patient_characteristics = ["Age"] # TIME VARIABLE IS EXCLUDED
+#vital_signs = ["Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate"]
+# tests = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Temp', 'Hgb', 'HCO3', 'BaseExcess',
+#        'Fibrinogen', 'Phosphate', 'WBC', 'Creatinine', 'PaCO2', 'AST', 'FiO2',
+#        'Platelets', 'SaO2', 'Glucose', 'Magnesium', 'Potassium', 'Calcium',
+#        'Alkalinephos', 'Bilirubin_direct', 'Chloride', 'Hct',
+#        'Bilirubin_total', 'TroponinI', 'pH']
 labels_tests = ['LABEL_BaseExcess', 'LABEL_Fibrinogen', 'LABEL_AST',
        'LABEL_Alkalinephos', 'LABEL_Bilirubin_total', 'LABEL_Lactate',
        'LABEL_TroponinI', 'LABEL_SaO2', 'LABEL_Bilirubin_direct',
        'LABEL_EtCO2' ]
 labels_sepsis = ['LABEL_Sepsis']
 labels_VS_mean = ['LABEL_RRate', 'LABEL_ABPm', 'LABEL_SpO2', 'LABEL_Heartrate']
-headers_train = test_features.columns
-headers_test = test_features.columns
-N_patients_train = np.array(train_features.shape[0]/12).astype(int)
-N_patients_test = np.array(test_features.shape[0]/12).astype(int)
+#headers_train = test_features.columns
+#headers_test = test_features.columns
+#N_patients_train = np.array(train_features.shape[0]/12).astype(int)
+#N_patients_test = np.array(test_features.shape[0]/12).astype(int)
 
 # Drop pid feature:
 train_features = train_features.drop(labels = "pid", axis = 1)
