@@ -18,8 +18,8 @@ labels_VS_mean = ['LABEL_RRate', 'LABEL_ABPm', 'LABEL_SpO2', 'LABEL_Heartrate']
 
 raw_train_path = "../data/train_features.csv"
 raw_test_path = "../data/test_features.csv"
-clean_columned_train_path = "../data/data_train_clean_columned_dataset.csv"
-clean_columned_test_path = "../data/data_test_clean_columned_dataset.csv"
+clean_columned_train_path = "../data/train_features_clean_columned.csv"
+clean_columned_test_path = "../data/test_features_clean_columned.csv"
 
 # Data import from folder
 X = np.array(pd.read_csv(clean_columned_train_path, index_col=0), dtype=np.float64)
@@ -49,13 +49,12 @@ output_dim = Y1_train.shape[1]  # 10
 
 model1 = Sequential()
 model1.add(Dense(units=input_dim, input_dim=input_dim))
-model1.add(Dense(1500, activation = "relu"))
-model1.add(Dense(740, activation = "relu"))
-model1.add(Dense(200, activation = "relu"))
+model1.add(Dense(100, activation = "relu"))
 model1.add(Dense(units=output_dim, activation='sigmoid'))
-#sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
+sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
 model1.compile(loss=keras.losses.binary_crossentropy,
-               optimizer=optimizers.Adadelta(),
+               #optimizer=optimizers.Adadelta(),
+               optimizer=sgd,
                metrics= [metrics.categorical_accuracy])
 
 model1.fit(X_train, Y1_train, batch_size=32, epochs=epochs1, shuffle=True)

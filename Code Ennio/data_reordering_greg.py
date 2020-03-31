@@ -9,9 +9,9 @@ import math
 # "pid" e "age", che si possono togliere semplicemente cambiando il range di "ind2" nell'inner "for loop"
 
 # Data import from folder
-data_set_x_train = np.array(pd.read_csv("../data/data_train_clean_entire_dataset.csv"))
+data_set_x_train = np.array(pd.read_csv("../data/train_features_clean_all.csv"))
 data_set_y_train = np.array(pd.read_csv("../data/train_labels.csv"))
-data_set_x_test = np.array(pd.read_csv("../data/data_test_clean_entire_dataset.csv"))
+data_set_x_test = np.array(pd.read_csv("../data/test_features_clean_all.csv"))
 
 #Concatenation of all the data for the 12 hours in data_set_x_train to obtain one single raw for each patient
 N = data_set_x_train.shape[0] #227940
@@ -50,6 +50,8 @@ labels = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Temp', 'Hgb', 'HCO3', 'BaseExcess',
 
 all_labels = ['pid', 'Age'] + sum([ [label + str(i+1) for label in labels] for i in range(12)],[])
 
-df = pd.DataFrame(X_test, columns=all_labels)
-df.to_csv('../data/data_test_clean_columned_dataset.csv', header=True, index=False)
+df_train = pd.DataFrame(X_train, columns=all_labels)
+df_train.to_csv('../data/train_features_clean_columned.csv', header=True, index=False)
+df_test = pd.DataFrame(X_test, columns=all_labels)
+df_test.to_csv('../data/test_features_clean_columned.csv', header=True, index=False)
 
