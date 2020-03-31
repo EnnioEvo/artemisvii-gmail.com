@@ -12,7 +12,7 @@ import math
 
 data_set_x_train = np.array(pd.read_csv("../data/data_train_clean_entire_dataset.csv"))
 data_set_y_train = np.array(pd.read_csv("../data/train_labels.csv"))
-data_set_x_test = np.array(pd.read_csv("../data/test_features.csv"))
+data_set_x_test = np.array(pd.read_csv("../data/data_test_clean_entire_dataset.csv"))
 
 
 
@@ -34,13 +34,13 @@ print(X_train.shape)
 
 #Concatenation of all the data for the 12 hours in data_set_x_test to obtain one single raw for each patient
 
-X_test=np.zeros((1,37+34*11))
+X_test=np.zeros((1,36+34*11))
 
 # put "15960" in the range function to stop the iteration of the inner "for cycle" exactly at the last row of tha last patient
 for ind1 in range(0, 15960, 12):
-    X_temp = np.array([data_set_x_train[ind1][0:3]])
+    X_temp = np.array([data_set_x_train[ind1][0:2]])
     for ind2 in range(ind1,ind1+12):
-        X_temp=np.array([np.concatenate((X_temp, np.array([data_set_x_test[ind2][3:]])), axis=None)])
+        X_temp=np.array([np.concatenate((X_temp, np.array([data_set_x_test[ind2][2:]])), axis=None)])
     X_test=np.row_stack((X_test,X_temp))
 
 X_test=X_test[1:, :]
@@ -60,6 +60,6 @@ labels = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Temp', 'Hgb', 'HCO3', 'BaseExcess',
 
 all_labels = ['pid', 'Age'] + sum([ [label + str(i+1) for label in labels] for i in range(12)],[])
 
-df = pd.DataFrame(X_train, columns=all_labels)
-df.to_csv('../data/data_train_clean_columned_dataset.csv', header=True, index=False)
+df = pd.DataFrame(X_test, columns=all_labels)
+df.to_csv('../data/data_test_clean_columned_dataset.csv', header=True, index=False)
 
