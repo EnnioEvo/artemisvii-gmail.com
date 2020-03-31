@@ -1,38 +1,41 @@
+##################  -- CLEANING DATA ALGORITHM - data ALL -- ##################
+# LEGEND --> VS= vital signs, tests: medical tests (from data)
+#           train: training data, test: testa data to be submitted
+#                   !Change loading and saving directory!
 import numpy as np
 import pandas as pd
 import time
 import sys
 from progress.bar import IncrementalBar
-
-
+print()
+print("#############  -- CLEANING DATA ALGORITHM - data ALL -- #############")
+# Imputation and claning:
 # Data import:
-train_features = pd.read_csv("../data/train_features.csv")
-test_features = pd.read_csv("../data/test_features.csv")
-train_labels = pd.read_csv("../data/train_labels.csv")
-
-# Extracting information:
-patient_characteristics = ["pid", "Age"]
+train_features = pd.read_csv("data/train_features.csv")
+test_features = pd.read_csv("data/test_features.csv")
+# Informatons on the headers -- Extracting information:
+patient_characteristics = ["pid", "Age"] # TIME VARIABLE IS EXCLUDED
 vital_signs = ["Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate"]
 tests = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Temp', 'Hgb', 'HCO3', 'BaseExcess',
        'Fibrinogen', 'Phosphate', 'WBC', 'Creatinine', 'PaCO2', 'AST', 'FiO2',
        'Platelets', 'SaO2', 'Glucose', 'Magnesium', 'Potassium', 'Calcium',
        'Alkalinephos', 'Bilirubin_direct', 'Chloride', 'Hct',
        'Bilirubin_total', 'TroponinI', 'pH']
-headers = train_features.columns
-N_patients = np.array(train_features.shape[0]/12).astype(int)
+headers_train = test_features.columns
+headers_test = test_features.columns
+N_patients_train = np.array(train_features.shape[0]/12).astype(int)
+N_patients_test = np.array(test_features.shape[0]/12).astype(int)
 
-
-# Vital signs data -> mean:
 # VS feature dataset:
 def VS_imputation(data_set, N_patients, vital_signs, hours_obs):
     print("First imputation loop -- VS features")
-    bar = IncrementalBar('### VS features processing ### patient analyzed:', max = N_patients)
     headers = data_set.columns
     h_vect = np.array([ii for ii in range(hours_obs)])
     VS_feature = data_set.loc[:,vital_signs] # .loc create a new dataframe
     VS_mean = np.nanmean(np.array(VS_feature), axis=0)
+    data_clean = np.array([])
     nan_matrix = VS_feature.isna()
-
+    bar1 = IncrementalBar('### VS features processing ### VS analyzed:', max = len(vital_signs))
     for VS in vital_signs:
         single_feature = np.array(VS_feature[VS])
         single_nan_matrix = np.array(nan_matrix[VS])
@@ -42,6 +45,8 @@ def VS_imputation(data_set, N_patients, vital_signs, hours_obs):
             if np.sum(np.array(bool_val)): # There exista a nan
                 if np.prod(np.array(bool_val)): # The entire column have nan
                     single_feature[patient*hours_obs:patient*hours_obs+hours_obs] =  VS_mean[ii]*np.ones(h_vect.shape)
+                    a = single_feature[patient*hours_obs:patient*hours_obs+hours_obs]
+                    assert np.logical_not(np.sum(np.isnan(a))), "NAN FOUNDED IN VS where all data are nan, it: %r" % patient
                 else:
                     X_nan = h_vect[bool_val]
                     Y_nan = single_feature[patient*hours_obs+X_nan]
@@ -53,71 +58,83 @@ def VS_imputation(data_set, N_patients, vital_signs, hours_obs):
                     # to increase speed: we use the mean
                     not_nan_mean = np.mean(Y)
                     single_feature[patient * hours_obs + X_nan] =  not_nan_mean
-        ii = ii + 1
-        bar.next()
-    bar.finish()
-    return VS_feature
+                    a = single_feature[patient*hours_obs:patient*hours_obs+hours_obs]
+                    assert np.logical_not(np.sum(np.isnan(a))), "NAN FOUNDED IN VS where not all data are nan, it: %r" % patient
+            ii = ii + 1
+        data_clean = np.append(data_clean, single_feature)
+        bar1.next()
+    bar1.finish()
+    data_clean = data_clean.reshape((N_patients*hours_obs, len(vital_signs)))
+    data_clean = pd.DataFrame(data=data_clean,columns=vital_signs)
+    return data_clean  #MANCA PARTE DI AGGREGAZIONE DELLE SINGLE FEATURES
+    
 
-
-def tests_cleaning(data_set_tests, tests):
-    print("Second imputation loop -- tests features")
-    test_min = np.ones(len(tests))
-    test_max = np.ones(len(tests))
-    col_headers = data_set_tests.columns
-    tests_data = data_set_tests.loc[:, tests]
-    tests_data_array = np.array(tests_data)
-
-    shape_idx = tests_data.shape[0]
-    ii = 0
-    bar2 = IncrementalBar('tests features: test analyzed:', max = len(tests))
+def test_clean_aggregation(data_set, N_patients, tests, hours_obs, min_tests, max_tests):
+    print('Second imputation loop + aggregation -- tests features')
+    ii = 0 
+    if np.logical_not(np.any(min_tests)):
+        test_min = np.nanmin(data_set[tests].loc[:], axis = 0)
+    else:
+        test_min = min_tests
+    if np.logical_not(np.any(max_tests)):
+        test_max = np.nanmax(data_set[tests].loc[:], axis = 0)
+    else:
+        test_max = max_tests       
+    data_set_new = np.zeros([N_patients*hours_obs, len(tests)])
+    bar2 = IncrementalBar('### TESTS features processing ### VS analyzed:', max = len(tests))
     for test in tests:
-        test_col = np.array(tests_data.loc[:, test])
-        test_min[ii] = np.nanmin(test_col)
-        test_max[ii] = np.nanmax(test_col)
-        tezt = '### Tests features processing ### test_feature in analysis: ' + str(ii+1) + '/' + str(len(tests))+' ...Analizing patients...'
-        #bar3 = IncrementalBar(tezt, max = shape_idx)
-        for values_idx in np.arange(shape_idx):
-            if np.isnan(test_col[values_idx]):
-                tests_data_array[values_idx, ii] = 0
+        test_col = np.array(data_set[test])
+        for idx in range(test_col.shape[0]):
+            if np.isnan(test_col[idx]):
+                test_col[idx] = 0
+            elif test_col[idx]> test_max[ii]: test_col[idx] = 2
+            elif test_col[idx]< test_min[ii]: test_col[idx] = 1
             else:
-                tests_data_array[values_idx, ii] = 1 + (test_col[values_idx] - test_min[ii]) / (
-                            test_max[ii] - test_min[ii])
-            #bar3.next()
-        #bar3.finish()
+                test_col[idx] = 1 + (test_col[idx] - test_min[ii])/(test_max[ii] - test_min[ii])
+        data_set_new[:, ii] = test_col
         ii = ii + 1
-        print(ii)
         bar2.next()
+        # if ii%5==0: print("Tests analyzed in loop: ", ii)
     bar2.finish()
-    tests_data = pd.DataFrame(data=tests_data_array,columns=tests)
-    return tests_data #, test_min, test_max 
+    return data_set_new, test_max, test_min 
 
-
-# VS data cleaning:
+print()
+# TRAIN FEATURES:
+print("---------- TRAIN FEATURES ----------")
+# VS Features:
 start = time.time()
-data_VS = VS_imputation(train_features, 3000, vital_signs, 12)
-data = 1
+data_VS_train = VS_imputation(train_features, N_patients_train, vital_signs, hours_obs=12) 
 end = time.time()
-print("VS analysis -- Execution time: ", end - start)
-print() 
-print() 
-# test data cleaning:
-start = time.time()
-train_features_new_tests= tests_cleaning(train_features, tests)
-end = time.time()
-print("tests_features analysis -- Execution time: ", end - start)
-
-# Elaborating data for saving:
-data_set_clean = np.column_stack((train_features[patient_characteristics], data_VS, train_features_new_tests))
+print("TRAIN FEATURES - VS features >>Execution time: ", end - start)
+# Tests features:
+start2 = time.time()
+data_tests_train, test_max_train, test_min_train = test_clean_aggregation(train_features, N_patients_train, tests, hours_obs=12, min_tests=None, max_tests=None)
+end2 = time.time()
+# Saving:
+data_patients = train_features[patient_characteristics]
+data_set_clean = np.column_stack((data_patients, data_VS_train, data_tests_train))
 col = patient_characteristics + vital_signs + tests
-#print("data_vs shape: ", data_VS.shape)
-print("train_features_new_tests shape: ", train_features_new_tests.shape)
-print("train_features[patient_characteristics] shape: ", train_features[patient_characteristics].shape)
-print('Len headers: ', len(col))
-print('Data_set_clean shape: ', data_set_clean.shape)
-print('## CHECK COMPLETE ##')
+tests_Set = pd.DataFrame(data_set_clean, index=None, columns=col)
+tests_Set.to_csv('data/train_features_clean_all.csv', header=True, index=False)
+print("NaN still inside per columns: ", np.sum(np.isnan(np.array(tests_Set)), axis=0))
+print()
 
+# TEST FEATURES: 
+print("---------- TEST FEATURES ----------")
+# VS features
+start3 = time.time()
+data_VS_test = VS_imputation(test_features, N_patients_test, vital_signs, hours_obs=12)
+end3 = time.time()
+print("TEST FEATURES - VS features >> Execution time: ", end3 - start3)
+# tests features
+start4 = time.time()
+data_tests_test, test_max, test_min = test_clean_aggregation(test_features, N_patients_test, tests, hours_obs=12, min_tests=test_min_train, max_tests=test_max_train)
+end4 = time.time()
+print("TEST FEATURES - tests features >> Execution time: ", end4 - start4)
+# Saving 
+data_patients = test_features[patient_characteristics]
+data_set_clean = np.column_stack((data_patients, data_VS_test, data_tests_test))
+col = patient_characteristics + vital_signs + tests
 submSet = pd.DataFrame(data_set_clean, index=None, columns=col)
-print(submSet.head())
-print("Saved file shape: ", submSet.shape)
-
-submSet.to_csv('../data/data_train_clean_entire_dataset.csv', header=True, index=False)
+submSet.to_csv('data/test_features_clean_all.csv', header=col, index=False)
+print("NaN still inside per columns: ", np.sum(np.isnan(np.array(submSet)), axis=0))
