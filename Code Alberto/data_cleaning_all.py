@@ -32,24 +32,26 @@ def VS_imputation(data_set, N_patients, vital_signs, hours_obs):
     VS_feature = data_set.loc[:,vital_signs] # .loc create a new dataframe
     VS_mean = np.nanmean(np.array(VS_feature), axis=0)
     nan_matrix = VS_feature.isna()
-    for patient in range(N_patients):
-        ii = 0
-        for VS in vital_signs:
+
+    for VS in vital_signs:
+        single_feature = np.array(VS_feature[VS])
+        for patient in range(N_patients):
+            ii = 0
             bool_val = nan_matrix[VS].iloc[patient*hours_obs:patient*hours_obs+hours_obs]
             if np.sum(np.array(bool_val)): # There exista a nan
                 if np.prod(np.array(bool_val)): # The entire column have nan
-                    VS_feature[VS].iloc[patient*hours_obs:patient*hours_obs+hours_obs] =  VS_mean[ii]*np.ones(h_vect.shape)
+                    single_feature[patient*hours_obs:patient*hours_obs+hours_obs] =  VS_mean[ii]*np.ones(h_vect.shape)
                 else:
                     X_nan = h_vect[bool_val]
-                    Y_nan = VS_feature[VS].iloc[patient*hours_obs+X_nan]
+                    Y_nan = single_feature[patient*hours_obs+X_nan]
                     X = h_vect[bool_val == False]
-                    Y = VS_feature[VS].iloc[patient*hours_obs+X]
+                    Y = single_feature[patient*hours_obs+X]
                     # MODEL OF IMPUTATION:
                     # regr.fit(X[:, None], Y)
                     # data_set[pat_row+X_nan, A] = regr.predict(X_nan[:, None])
                     # to increase speed: we use the mean
                     not_nan_mean = np.mean(Y)
-                    VS_feature[VS].iloc[patient * hours_obs + X_nan] =  not_nan_mean
+                    single_feature[patient * hours_obs + X_nan] =  not_nan_mean
         ii = ii + 1
         bar.next()
     bar.finish()
@@ -62,6 +64,8 @@ def tests_cleaning(data_set_tests, tests):
     test_max = np.ones(len(tests))
     col_headers = data_set_tests.columns
     tests_data = data_set_tests.loc[:, tests]
+    tests_data_array = np.array(tests_data)
+
     shape_idx = tests_data.shape[0]
     ii = 0
     bar2 = IncrementalBar('tests features: test analyzed:', max = len(tests))
@@ -73,16 +77,19 @@ def tests_cleaning(data_set_tests, tests):
         #bar3 = IncrementalBar(tezt, max = shape_idx)
         for values_idx in np.arange(shape_idx):
             if np.isnan(test_col[values_idx]):
-                tests_data.iloc[values_idx, ii] = 0
+                tests_data_array[values_idx, ii] = 0
             else:
-                tests_data.iloc[values_idx, ii] = 1 + (test_col[values_idx] - test_min[ii]) / (
+                tests_data_array[values_idx, ii] = 1 + (test_col[values_idx] - test_min[ii]) / (
                             test_max[ii] - test_min[ii])
+
+
             #bar3.next()
         #bar3.finish()
         ii = ii + 1
         print(ii)
         bar2.next()
     bar2.finish()
+    tests_data = pd.DataFrame(data=tests_data_array,columns=tests)
     return tests_data #, test_min, test_max 
 
 
@@ -103,7 +110,7 @@ print("tests_features analysis -- Execution time: ", end - start)
 # Elaborating data for saving:
 data_set_clean = np.column_stack((train_features[patient_characteristics], data_VS, train_features_new_tests))
 col = patient_characteristics + vital_signs + tests
-print("data_vs shape: ", data_VS.shape)
+#print("data_vs shape: ", data_VS.shape)
 print("train_features_new_tests shape: ", train_features_new_tests.shape)
 print("train_features[patient_characteristics] shape: ", train_features[patient_characteristics].shape)
 print('Len headers: ', len(col))
@@ -113,4 +120,5 @@ print('## CHECK COMPLETE ##')
 submSet = pd.DataFrame(data_set_clean, index=None, columns=col)
 print(submSet.head())
 print("Saved file shape: ", submSet.shape)
+
 submSet.to_csv('../data/data_train_clean_entire_dataset.csv', header=True, index=False)

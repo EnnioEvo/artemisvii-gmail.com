@@ -33,6 +33,9 @@ train_size = 15000
 X_train = X[0:train_size, :]
 X_val = X[train_size:, :]
 
+nanx = np.isnan(X_train)
+nanxval = np.isnan(X_val)
+
 # MODEL FOR SUBTASK 1
 Y1_train = np.array(Y_df[labels_tests], dtype=np.float64)[0:train_size]
 Y1_val = np.array(Y_df[labels_tests], dtype=np.float64)[train_size:]
