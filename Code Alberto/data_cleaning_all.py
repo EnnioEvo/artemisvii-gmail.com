@@ -35,9 +35,10 @@ def VS_imputation(data_set, N_patients, vital_signs, hours_obs):
 
     for VS in vital_signs:
         single_feature = np.array(VS_feature[VS])
+        single_nan_matrix = np.array(nan_matrix[VS])
         for patient in range(N_patients):
             ii = 0
-            bool_val = nan_matrix[VS].iloc[patient*hours_obs:patient*hours_obs+hours_obs]
+            bool_val = single_nan_matrix[patient*hours_obs:patient*hours_obs+hours_obs]
             if np.sum(np.array(bool_val)): # There exista a nan
                 if np.prod(np.array(bool_val)): # The entire column have nan
                     single_feature[patient*hours_obs:patient*hours_obs+hours_obs] =  VS_mean[ii]*np.ones(h_vect.shape)
@@ -81,8 +82,6 @@ def tests_cleaning(data_set_tests, tests):
             else:
                 tests_data_array[values_idx, ii] = 1 + (test_col[values_idx] - test_min[ii]) / (
                             test_max[ii] - test_min[ii])
-
-
             #bar3.next()
         #bar3.finish()
         ii = ii + 1
