@@ -13,9 +13,9 @@ np.random.seed(seed=123)
 #import cleaning_script
 
 #cleaned data import:
-train_features = pd.read_csv("data/train_features_clean_all.csv")
-test_features_pre = pd.read_csv("data/test_features_clean_all.csv")
-train_labels = pd.read_csv("data/data_full/train_labels.csv")
+train_features = pd.read_csv("../../data/train_features_clean_all.csv")
+test_features_pre = pd.read_csv("../../data/test_features_clean_all.csv")
+train_labels = pd.read_csv("../../data/train_labels.csv")
 
 # Informatons on the headers -- Extracting information:
 patient_characteristics = ["Age"] # TIME VARIABLE IS EXCLUDED

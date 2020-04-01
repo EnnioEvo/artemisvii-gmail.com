@@ -39,20 +39,23 @@ X_val = X.iloc[train_size:, :]
 nanx = np.isnan(X_train)
 nanxval = np.isnan(X_val)
 
+#labels_target = [labels_tests]
+labels_target = ['LABEL_BaseExcess']
+
 # MODEL FOR SUBTASK 1
-Y1_train = np.array(Y_df[labels_tests])[0:train_size]
-Y1_val = np.array(Y_df[labels_tests])[train_size:]
+Y1_train = np.array(Y_df[labels_target])[0:train_size]
+Y1_val = np.array(Y_df[labels_target])[train_size:]
 #Y1_train_df, Y1_val_df = train_test_split(Y_df, test_size=0.2)
 
 # MODEL TASK 1
 print("######### TASK 1 #########")
-epochs1 = 10
+epochs1 = 5
 
 input_dim = X.shape[1]  # 35 uncolumned, #409 columned
 output_dim = Y1_train.shape[1]  # 10
 
 weights = (Y1_train.shape[0] + Y1_val.shape[0])/(sum(Y1_train) + sum(Y1_val))
-weights = dict(zip([i for i in range(10)], weights))
+weights = dict(zip([i+2 for i in range(Y1_train.shape[1])], weights))
 
 model1 = Sequential()
 model1.add(Dense(units=input_dim, input_dim=input_dim))
@@ -67,11 +70,11 @@ model1.compile(loss=keras.losses.binary_crossentropy,
                #optimizer=sgd,
                metrics= [metrics.categorical_accuracy])
 
-model1.fit(X_train, Y1_train, batch_size=32, epochs=epochs1, shuffle=True, class_weight=weights)
+model1.fit(X_train, Y1_train, batch_size=32, epochs=epochs1, shuffle=True)
 test_loss, test_acc = model1.evaluate(X_val, Y1_val)
 print("TASK 1 --> test_acc: ", test_acc)
 Y1_pred = model1.predict(X_val)
 task1 = 0
-for i in range(len(labels_tests)):
-    task1 = task1 + 1 / len(labels_tests) * (skmetrics.roc_auc_score(Y1_val[:, i], Y1_pred[:, i]))
+for i in range(len(labels_target)):
+    task1 = task1 + 1 / len(labels_target) * (skmetrics.roc_auc_score(Y1_val[:, i], Y1_pred[:, i]))
 print("AOC score -- task 1: ", task1, "\n\n")

@@ -48,7 +48,7 @@ labels = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Temp', 'Hgb', 'HCO3', 'BaseExcess',
        'Alkalinephos', "SpO2", 'Bilirubin_direct', 'Chloride', 'Hct',
        'Heartrate', 'Bilirubin_total', 'TroponinI', "ABPs", 'pH']
 
-all_labels = ['pid', 'Age'] + sum([ [label + str(i+1) for label in labels] for i in range(12)],[])
+all_labels = ['pid', 'Age'] + sum([ [label + str(i+1) for i in range(12)] for label in labels] ,[])
 
 df_train = pd.DataFrame(X_train, columns=all_labels)
 df_train.to_csv('../data/train_features_clean_columned.csv', header=True, index=False)
