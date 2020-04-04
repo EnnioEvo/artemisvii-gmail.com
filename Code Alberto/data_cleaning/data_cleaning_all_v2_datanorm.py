@@ -74,11 +74,11 @@ def test_clean_aggregation(data_set, N_patients, tests, hours_obs, min_tests, ma
     print('Second imputation loop + aggregation -- tests features')
     ii = 0 
     if np.logical_not(np.any(min_tests)):
-        test_min = np.nanmin(data_set[tests].loc[:], axis = 0)
+        test_min = np.nanmean(data_set[tests].loc[:], axis = 0)
     else:
         test_min = min_tests
     if np.logical_not(np.any(max_tests)):
-        test_max = np.nanmax(data_set[tests].loc[:], axis = 0)
+        test_max = np.nanstd(data_set[tests].loc[:], axis = 0)
     else:
         test_max = max_tests       
     data_set_new = np.zeros([N_patients*hours_obs, len(tests)])
