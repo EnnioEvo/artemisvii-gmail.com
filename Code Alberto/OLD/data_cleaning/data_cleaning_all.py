@@ -11,8 +11,8 @@ print()
 print("#############  -- CLEANING DATA ALGORITHM - data ALL -- #############")
 # Imputation and claning:
 # Data import:
-train_features = pd.read_csv("data/train_features.csv")
-test_features = pd.read_csv("data/test_features.csv")
+train_features = pd.read_csv("../../data/train_features.csv")
+test_features = pd.read_csv("../../data/test_features.csv")
 # Informatons on the headers -- Extracting information:
 patient_characteristics = ["pid", "Age"] # TIME VARIABLE IS EXCLUDED
 vital_signs = ["Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate", 'Temp']
@@ -115,7 +115,7 @@ data_patients = train_features[patient_characteristics]
 data_set_clean = np.column_stack((data_patients, data_VS_train, data_tests_train))
 col = patient_characteristics + vital_signs + tests
 tests_Set = pd.DataFrame(data_set_clean, index=None, columns=col)
-tests_Set.to_csv('data/train_features_clean_all.csv', header=True, index=False)
+tests_Set.to_csv('../../data/train_features_clean_all2.csv', header=True, index=False)
 print("NaN still inside per columns: ", np.sum(np.isnan(np.array(tests_Set)), axis=0))
 print()
 
@@ -136,5 +136,5 @@ data_patients = test_features[patient_characteristics]
 data_set_clean = np.column_stack((data_patients, data_VS_test, data_tests_test))
 col = patient_characteristics + vital_signs + tests
 submSet = pd.DataFrame(data_set_clean, index=None, columns=col)
-submSet.to_csv('data/test_features_clean_all.csv', header=col, index=False)
+submSet.to_csv('../../data/test_features_clean_all2.csv', header=col, index=False)
 print("NaN still inside per columns: ", np.sum(np.isnan(np.array(submSet)), axis=0))
