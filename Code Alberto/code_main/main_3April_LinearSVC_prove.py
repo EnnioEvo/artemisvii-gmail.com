@@ -107,7 +107,7 @@ Y_temp_2=np.zeros((Ntest,1))
 #print(Y_test_1.shape)
 for ind1 in range(1,11):
     Y_train = np.array([data_set_y_train[0:Ntrain, ind1]]).T
-    print(Y_train.shape)
+    #print(Y_train.shape)
     clf = svm.LinearSVC(C=0.0001, class_weight='balanced',max_iter=1000)
     clf.fit(X_train, np.ravel(Y_train))
     Y_temp_1[:,0]=np.array([clf.decision_function(X_test)])
@@ -127,7 +127,8 @@ print(Y_test_1)
 #print('timer:', (time()-start)/Ntrain * 1000)
 
 ###################################################################################
-features_considered = ["Heartrate", "RRate", 'Temp']
+features_considered = ['Age', "Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate", 'Temp','EtCO2', 'PTT', 'BUN', 'Lactate', 'Hgb', 'HCO3', 'BaseExcess', 'Fibrinogen', 'Phosphate', 'WBC', 'Creatinine', 'PaCO2', 'AST', 'FiO2', 'Platelets', 'SaO2', 'Glucose', 'Magnesium', 'Potassium', 'Calcium', 'Alkalinephos', 'Bilirubin_direct', 'Chloride', 'Hct', 'Bilirubin_total', 'TroponinI', 'pH']
+
 train_features_task_2 = np.array(data_set_train[features_considered].loc[:])
 N = 227940
 X_train_in_2 = np.zeros((math.ceil(N/12),len(features_considered)*12))
@@ -140,7 +141,7 @@ for ind1 in range(0, N, 12):
         X_temp=np.array([np.concatenate((X_temp, np.array([train_features_task_2[ind2][:]])), axis=None)])
     X_train_in_2[int(ind1/12), :] = X_temp
     X_temp=[]
-print(X_train_in.shape)
+#print(X_train_in.shape)
 
 # the initial dataset is split to obtain a train set and a test set
 data_set_x_train_2=X_train_in_2[0:15000,:]
@@ -156,26 +157,31 @@ Y_test_2=np.zeros((Ntest,2))
 #Y_test_2[0:Ntest,0]=X_test[0:Ntest,0]
 Y_temp_3=np.zeros((Ntest,1))
 Y_temp_4=np.zeros((Ntest,1))
-print(Y_test_2.shape)
+#print(Y_test_2.shape)
 Y_train = np.array([data_set_y_train[0:Ntrain, 11]]).T
-print(Y_train.shape)
+#print(Y_train.shape)
 clf = svm.LinearSVC(C=0.0001, class_weight='balanced',max_iter=1000)
+print('X_train ', data_set_x_train_2)
+print('Y_train ', Y_train)
 clf.fit(data_set_x_train_2, np.ravel(Y_train))
 
+print('X_val ', data_set_x_test_2)
 Y_temp_3[:,0]=np.array([clf.decision_function(data_set_x_test_2)])
 Y_temp_4=1/(1+np.exp(-Y_temp_3))
 Y_test_2[:,1]=Y_temp_4[:,0]
+print('pred: ', Y_temp_4[:,0])
+#print(Y_temp_4)
 #print(Y_train)
 #print(Y_train.shape)
-print(Y_test_2)
+#print(Y_test_2)
 
 #Subtask 3
 Y_test_3=np.zeros((Ntest,5))
 #Y_test_3[0:Ntest,0]=X_test[0:Ntest,0]
-print(Y_test_3.shape)
+#print(Y_test_3.shape)
 for ind2 in range(1,5):
     Y_train = np.array([data_set_y_train[0:Ntrain, ind2+11]]).T
-    print(Y_train.shape)
+    #print(Y_train.shape)
     # Different method
     #clf = svm.LinearSVR(max_iter=1000)
     #clf.fit(X_train_subtask3, np.ravel(Y_train))
