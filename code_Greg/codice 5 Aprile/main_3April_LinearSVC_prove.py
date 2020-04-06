@@ -12,8 +12,8 @@ from sklearn.preprocessing import StandardScaler
 from sklearn import preprocessing
 
 # Data import from folder. Remember: train 'train_features_clean_all' has 36 columns since the column of the hours is not included 
-data_set_x_train_input = np.array(pd.read_csv("../data/train_features_clean_all_no_norm.csv"))
-data_set_y_train_input = np.array(pd.read_csv("../data/train_labels.csv"))
+data_set_x_train_input = np.array(pd.read_csv("../../Code Alberto/data/train_features_clean_all_no_norm.csv"))
+data_set_y_train_input = np.array(pd.read_csv("../../Code Alberto/data/train_labels.csv"))
 
 
 #Concatenation of all the data for the 12 hours in data_set_x_train to obtain one single raw for each patient
