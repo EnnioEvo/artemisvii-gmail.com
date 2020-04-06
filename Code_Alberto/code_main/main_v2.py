@@ -90,7 +90,7 @@ model_2 =Sequential()
 model_2.add(Dense(units = 500, input_dim= X.shape[1]))
 model_2.add(Dropout(0.5))
 model_2.add(BatchNormalization())
-model_2.add(Dense(100, activation = "tanh")) #tanh
+model_2.add(Dense(100, activation = "tanh")) #tanh \100
 model_2.add(Dropout(0.5))
 model_2.add(BatchNormalization())
 model_2.add(Dense(2, activation = "softmax"))
@@ -105,10 +105,10 @@ prediction_ind = prediction_ind + 1
 
 ###################### TASK 3 ##########################################################################
 model_3 =Sequential()
-model_3.add(Dense(units = 500, input_dim= X.shape[1]))
+model_3.add(Dense(units = 50, input_dim= X.shape[1]))
 model_3.add(Dropout(0.5))
 model_3.add(BatchNormalization())
-model_3.add(Dense(100, activation = "relu",)) #relu
+model_3.add(Dense(10, activation = "relu",)) #relu \100
 model_3.add(Dropout(0.5))
 model_3.add(BatchNormalization())
 model_3.add(Dense(1, activation = "linear"))
@@ -163,8 +163,8 @@ def get_score(df_true, df_submission):
 
 df_true = real_solution
 
-#for label in TESTS + ['LABEL_Sepsis']:
-#    # round classification labels
-#    df_true[label] = np.around(df_true[label].values)
+for label in TESTS + ['LABEL_Sepsis']:
+    # round classification labels
+    df_true[label] = np.around(df_true[label].values)
 print()
 print('Score: ', get_score(df_true, df_submission))
