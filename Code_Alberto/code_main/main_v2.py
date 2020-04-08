@@ -10,6 +10,8 @@ from keras.models import Sequential
 from keras.layers import Dense, Dropout, BatchNormalization
 from keras.utils import to_categorical
 from keras import regularizers
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.ensemble import RandomForestClassifier
 
 train_features = pd.read_csv('data/train_features_clean_all_no_norm.csv')
 train_labels = pd.read_csv('data/train_labels.csv')
@@ -68,63 +70,151 @@ prediction_ind = 1
 
 
 ###################### TASK 1 ##########################################################################
+#for test in labels_tests:
+ #      print('Test considered : ', test)
+ ##      Y_t1 = np.array(train_labels[test].iloc[:])[0:train_data]
+ #      #model_1 = SVC(C=0.0001, kernel='rbf', degree=1, class_weight='balanced', verbose=1)
+ #      #model_1 = svm.LinearSVC(C=0.0001, class_weight='balanced',max_iter=1000)
+ #      model_1.fit(X, Y_t1)
+  #     prediction[:,prediction_ind] = sigmfun(model_1.decision_function(X_test))
+ #      prediction_ind = prediction_ind + 1
+
+print('########### task 1 loop ##########')
+df_true = real_solution
+C_coed = [10, 1, 0.1, 0.01, 0.001, 0.0001]
+kernels = ['rbf', 'poly', 'sigmoid']
+
+score_poli_1 = []
+C_poli_1 = []
+deg_poli_1 = []
+score_oth_1 = []
+kerlen_oth_1 = []
+C_other_1 = []
 for test in labels_tests:
-       print('Test considered : ', test)
        Y_t1 = np.array(train_labels[test].iloc[:])[0:train_data]
-       #model_1 = SVC(C=0.0001, kernel='rbf', degree=1, class_weight='balanced', verbose=1)
-       model_1 = svm.LinearSVC(C=0.0001, class_weight='balanced',max_iter=1000)
-       model_1.fit(X, Y_t1)
-       prediction[:,prediction_ind] = sigmfun(model_1.decision_function(X_test))
-       prediction_ind = prediction_ind + 1
+       for C in C_coed:
+              for kernel in kernels:
+                     if kernel == 'poly':
+                            for deg in range(1, 4):
+                                   model_1 = SVC(C=C, kernel=kernel, degree=deg, tol=0.0001, class_weight='balanced')
+                                   model_1.fit(X, np.ravel(Y_t1))
+                                   prediction = np.ravel(sigmfun(model_1.decision_function(X_test)))
+                                   task1 = skmetrics.roc_auc_score(df_true[test], prediction)
+                                   C_poli_1.append(C)
+                                   score_poli_1.append(task1)
+                                   deg_poli_1.append(deg)
+                                   print(test, 'poly, ', deg, C, task1)
+                     else:
+                            model_1 = SVC(C=C, kernel=kernel, tol=0.001, class_weight='balanced') 
+                            model_1.fit(X, np.ravel(Y_t1)) 
+                            prediction = np.ravel(sigmfun(model_1.decision_function(X_test))) 
+                            task1 = skmetrics.roc_auc_score(df_true[test], prediction)  
+                            C_other_1.append(C)
+                            kerlen_oth_1.append(kernel)
+                            score_oth_1.append(task1)
+                            print(test, kernel, C, task1)
 
-
+poli_1 = np.concatenate((C_poli_1,deg_poli_1,score_poli_1), axis = 0)
+other_1 = np.concatenate((C_other_1,kerlen_oth_1,score_oth_1), axis = 0)
+df_submission_1 = pd.DataFrame(data=poli_1)
+df_submission_1.to_csv('poly_1.csv', header=False, index=False)
+df_submission_1 = pd.DataFrame(data=other_1)
+df_submission_1.to_csv('others_1.csv', header=False, index=False)
 ###################### TASK 2 ##########################################################################
 Y_t2 = np.array(train_labels[labels_sepsis].iloc[:])[0:train_data]
+print('########### task 2 loop ##########')
 print('Testing ', labels_sepsis)
 #model_2 = SVC(C=10, kernel='rbf', class_weight='balanced')
-#model_2 = svm.LinearSVC(C=0.0001, class_weight='balanced',max_iter=10000)
+#model_2 = svm.LinearSVC(C=0.01, class_weight='balanced',max_iter=10000)
+
+C_coed = [10, 1, 0.1, 0.01, 0.001, 0.0001]
+kernels = ['rbf', 'poly', 'sigmoid']
+
+df_true = real_solution
+score_poli = []
+C_poli = []
+deg_poli = []
+score_oth = []
+kerlen_oth = []
+C_other = []
+for C in C_coed:
+       for kernel in kernels:
+              if kernel == 'poly':
+                     for deg in range(1, 4):
+                            model_2 = SVC(C=C, kernel=kernel, degree=deg, tol=0.001, class_weight='balanced')
+                            model_2.fit(X, np.ravel(Y_t2))
+                            prediction = np.ravel(sigmfun(model_2.decision_function(X_test)))
+                            task2 = skmetrics.roc_auc_score(df_true['LABEL_Sepsis'], prediction)
+                            C_poli.append(C)
+                            score_poli.append(task2)
+                            deg_poli.append(deg)
+                            print('poly, ', deg, C, task2)
+              else:
+                     model_2 = SVC(C=C, kernel=kernel, tol=0.0001, class_weight='balanced') 
+                     model_2.fit(X, np.ravel(Y_t2)) 
+                     prediction = np.ravel(sigmfun(model_2.decision_function(X_test))) 
+                     task2 = skmetrics.roc_auc_score(df_true['LABEL_Sepsis'], prediction)  
+                     C_other.append(C)
+                     kerlen_oth.append(kernel)
+                     score_oth.append(task2)
+                     print(kernel, C, task2)
+
+results_linear = np.concatenate((deg_poli, C_poli, score_poli), axis = 0)
+results_other = np.concatenate((kerlen_oth, C_other, score_oth), axis=0)
+df_submission_1 = pd.DataFrame(data=results_linear)
+df_submission_1.to_csv('poly_2.csv', header=False, index=False)
+df_submission_1 = pd.DataFrame(data=results_other)
+df_submission_1.to_csv('others_2.csv', header=False, index=False)
+
+#model_2 = SVC(C=1.0, kernel='linear', degree=3, tol=0.0001, class_weight='balanced, ')
 #model_2.fit(X, np.ravel(Y_t2))
 #prediction[:,prediction_ind] = np.ravel(sigmfun(model_2.decision_function(X_test)))
 
-model_2 =Sequential()
-model_2.add(Dense(units = 500, input_dim= X.shape[1]))
-model_2.add(Dropout(0.5))
-model_2.add(BatchNormalization())
-model_2.add(Dense(100, activation = "tanh")) #tanh \100
-model_2.add(Dropout(0.5))
-model_2.add(BatchNormalization())
-model_2.add(Dense(2, activation = "softmax"))
-model_2.compile(optimizer=keras.optimizers.Adadelta(),
-              loss=keras.losses.binary_crossentropy,
-              metrics=[keras.metrics.categorical_accuracy])
+#df_true = real_solution
+task2 = skmetrics.roc_auc_score(df_true['LABEL_Sepsis'], df_submission['LABEL_Sepsis'])
 
-model_2.fit(X, to_categorical(Y_t2), epochs=10)
-prediction[:,prediction_ind] = np.ravel(model_2.predict(X_test)[:,1])
+
+# model_2 =Sequential()
+# model_2.add(Dense(units = 500, input_dim= X.shape[1]))
+# model_2.add(Dropout(0.5))
+# model_2.add(BatchNormalization())
+# model_2.add(Dense(100, activation = "tanh")) #tanh \100
+# model_2.add(Dropout(0.5))
+# model_2.add(BatchNormalization())
+# model_2.add(Dense(2, activation = "softmax"))
+# model_2.compile(optimizer=keras.optimizers.Adadelta(),
+#               loss=keras.losses.binary_crossentropy,
+#               metrics=[keras.metrics.categorical_accuracy])
+
+#model_2.fit(X, to_categorical(Y_t2), epochs=10)
+#prediction[:,prediction_ind] = np.ravel(model_2.predict(X_test)[:,1])
+
 prediction_ind = prediction_ind + 1
 
 
 ###################### TASK 3 ##########################################################################
-model_3 =Sequential()
-model_3.add(Dense(units = 50, input_dim= X.shape[1]))
-model_3.add(Dropout(0.5))
-model_3.add(BatchNormalization())
-model_3.add(Dense(10, activation = "relu",)) #relu \100
-model_3.add(Dropout(0.5))
-model_3.add(BatchNormalization())
-model_3.add(Dense(1, activation = "linear"))
-model_3.compile(optimizer=keras.optimizers.Adadelta(),
-              loss=keras.losses.mean_squared_error)
+# model_3 =Sequential()
+# model_3.add(Dense(units = 50, input_dim= X.shape[1]))
+# model_3.add(Dropout(0.5))
+# model_3.add(BatchNormalization())
+# model_3.add(Dense(10, activation = "relu",)) #relu \100
+# model_3.add(Dropout(0.5))
+# model_3.add(BatchNormalization())
+# model_3.add(Dense(1, activation = "linear"))
+# model_3.compile(optimizer=keras.optimizers.Adadelta(),
+#               loss=keras.losses.mean_squared_error)
 
 for VS in labels_VS_mean:
        print('Testing ', VS)
        Y_t3 = np.array(train_labels[VS].iloc[:])[0:train_data]
-       Y_t3_mean = np.mean(Y_t3)
-       Y_t3_std = np.std(Y_t3)
-       Y_t3 = (Y_t3-Y_t3_mean)/Y_t3_std
-       #model_3 = LinearRegression()
-       model_3.fit(X, Y_t3, epochs=10)
-       Y_predictions_3 = model_3.predict(X_test)*Y_t3_std + Y_t3_mean
+       #Y_t3_mean = np.mean(Y_t3)
+       #Y_t3_std = np.std(Y_t3)
+       #Y_t3 = (Y_t3-Y_t3_mean)/Y_t3_std
+       model_3 = LinearRegression()
+       model_3.fit(X, Y_t3)
+       #Y_predictions_3 = model_3.predict(X_test)*Y_t3_std + Y_t3_mean
        #prediction[:,prediction_ind] = np.ravel(model_3.predict(X_test))
+       Y_predictions_3 = model_3.predict(X_test)
        prediction[:,prediction_ind] = np.ravel(Y_predictions_3)
        prediction_ind = prediction_ind + 1
 
