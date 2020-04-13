@@ -2,13 +2,10 @@ import pandas as pd
 import numpy as np
 import sklearn.metrics as skmetrics
 from sklearn import svm
-from sklearn import linear_model
 from sklearn.linear_model import LinearRegression
-from sklearn.feature_selection import RFE
 import copy
 
 np.random.seed(seed=123)
-# from sklearn.metrics import classification_report, confusion_matrix
 
 # ---------------------------------------------------------
 # ------------ DATA IMPORT AND DEFINITIONS ----------------
@@ -52,6 +49,11 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ----------------- DATA SELECTION ------------------------
 # ---------------------------------------------------------
 
+#Shuffle dataset and labels
+rd_permutation = np.random.permutation(train_features.index)
+train_features = train_features.reindex(rd_permutation).set_index(np.arange(0,train_features.shape[0],1))
+train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0,train_labels.shape[0],1))
+
 # Definition of test and val data size:
 # task 1
 train_size = 15000
@@ -90,85 +92,85 @@ Y_val_tot = pd.DataFrame(np.zeros([X_val_t3.shape[0], len(all_labels)]), columns
 # ------------------- TRAINING TASK 1 --------------------
 # ---------------------------------------------------------
 
-#labels_target = labels_tests + ['LABEL_Sepsis']
-#usefulness_matrix_t1 = pd.DataFrame(index=all_features, columns=labels_target)
-# scores_t1 = []
-# for i in range(0, len(labels_target)):
-#     label_target = labels_target[i]
-#     Y_t1 = train_labels[label_target].iloc[0:train_size]
-#     Y_val_t1 = train_labels[label_target].iloc[train_size:]
-#
-#     # fit
-#     clf = svm.LinearSVC(C=0.0001, class_weight='balanced', tol=10e-2, verbose=0)
-#     clf.fit(X_t1, Y_t1)
-#     # predict
-#     Y_temp = np.array([clf.decision_function(X_val_t1)])
-#     Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
-#     # score
-#     score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
-#     print("Removed: Nothing", "\nROC AUC -- score ", label_target, " :", score)
-#
-#     useful_features_mask = np.repeat([True], len(all_features))
-#     for _ in range(10):
-#         useful_features_mask_temp = useful_features_mask
-#         for j in range(0, len(all_features)):
-#             # build a new mask
-#             new_useful_features_mask = copy.deepcopy(useful_features_mask)
-#             new_useful_features_mask[j] = ~new_useful_features_mask[j]
-#             long_useful_features_mask = \
-#                 np.insert(np.repeat(new_useful_features_mask[1:], 12), 0, new_useful_features_mask[0])
-#             # mask the dataset
-#             X_t1_useful = X_t1[:, long_useful_features_mask]
-#             X_val_t1_useful = X_val_t1[:, long_useful_features_mask]
-#
-#             # fit
-#             clf = svm.LinearSVC(C=0.0001, class_weight='balanced', tol=10e-2, verbose=0)
-#             clf.fit(X_t1_useful, Y_t1)
-#
-#             # predict
-#             Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
-#             Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
-#
-#             # score
-#             new_score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
-#             print("Removed: ", all_features[j], "\nROC AUC -- score ", label_target, " :", new_score)
-#             if new_score>score:
-#                 score = new_score
-#                 useful_features_mask = copy.deepcopy(new_useful_features_mask)
-#         if np.all(useful_features_mask_temp == useful_features_mask): #if the list of useful features has not changed exit
-#             break
-#
-#     useful_features = [d for d, s in zip(all_labels, useful_features_mask) if s]
-#     print('\nUseful features for label ', label_target, ':\n')
-#     print(useful_features)
-#     useless_features = [d for d, s in zip(all_labels, ~useful_features_mask) if s]
-#     print('\nUseless features for label ', label_target, ':\n')
-#     print(useless_features)
-#
-#     usefulness_matrix_t1[label_target] = useful_features_mask
-#     scores_t1 = scores_t1 + [score]
-#     print("ROC AUC final score ", i, " ", label_target, " :", score, '\n')
-#
-#     #mask with found useful features
-#     long_useful_features_mask = \
-#         np.insert(np.repeat(useful_features_mask[1:], 12), 0, useful_features_mask[0])
-#     X_test_t1_useful = X_test_t1[:, long_useful_features_mask]
-#     X_t1_useful = X_t1[:, long_useful_features_mask]
-#
-#     #last fit for current label
-#     clf = svm.LinearSVC(C=0.0001, class_weight='balanced', tol=10e-2, verbose=0)
-#     clf.fit(X_t1_useful, Y_t1)
-#
-#     #predict and save
-#     Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
-#     Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
-#     Y_test_tot.loc[:, label_target] = Y_test_pred
-#
-# task1 = sum(scores_t1[:-1]) / len(scores_t1[:-1])
-# print("ROC AUC task1 score  ", task1)
-# task2 = scores_t1[-1]
-# print("ROC AUC task2 score ", task2)
-# usefulness_matrix_t1.to_csv('../data/usefulness_matrix_t1.csv', header=True, index=True, float_format='%.7f')
+labels_target = labels_tests + ['LABEL_Sepsis']
+usefulness_matrix_t1 = pd.DataFrame(index=all_features, columns=labels_target)
+scores_t1 = []
+for i in range(0, len(labels_target)):
+    label_target = labels_target[i]
+    Y_t1 = train_labels[label_target].iloc[0:train_size]
+    Y_val_t1 = train_labels[label_target].iloc[train_size:]
+
+    # fit
+    clf = svm.LinearSVC(C=0.0001, class_weight='balanced', tol=10e-2, verbose=0)
+    clf.fit(X_t1, Y_t1)
+    # predict
+    Y_temp = np.array([clf.decision_function(X_val_t1)])
+    Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+    # score
+    score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
+    print("Removed: Nothing", "\nROC AUC -- score ", label_target, " :", score)
+
+    useful_features_mask = np.repeat([True], len(all_features))
+    for _ in range(10):
+        useful_features_mask_temp = useful_features_mask
+        for j in range(0, len(all_features)):
+            # build a new mask
+            new_useful_features_mask = copy.deepcopy(useful_features_mask)
+            new_useful_features_mask[j] = ~new_useful_features_mask[j]
+            long_useful_features_mask = \
+                np.insert(np.repeat(new_useful_features_mask[1:], 12), 0, new_useful_features_mask[0])
+            # mask the dataset
+            X_t1_useful = X_t1[:, long_useful_features_mask]
+            X_val_t1_useful = X_val_t1[:, long_useful_features_mask]
+
+            # fit
+            clf = svm.LinearSVC(C=0.0001, class_weight='balanced', tol=10e-2, verbose=0)
+            clf.fit(X_t1_useful, Y_t1)
+
+            # predict
+            Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
+            Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+
+            # score
+            new_score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
+            print("Removed: ", all_features[j], "\nROC AUC -- score ", label_target, " :", new_score)
+            if new_score>score:
+                score = new_score
+                useful_features_mask = copy.deepcopy(new_useful_features_mask)
+        if np.all(useful_features_mask_temp == useful_features_mask): #if the list of useful features has not changed exit
+            break
+
+    useful_features = [d for d, s in zip(all_labels, useful_features_mask) if s]
+    print('\nUseful features for label ', label_target, ':\n')
+    print(useful_features)
+    useless_features = [d for d, s in zip(all_labels, ~useful_features_mask) if s]
+    print('\nUseless features for label ', label_target, ':\n')
+    print(useless_features)
+
+    usefulness_matrix_t1[label_target] = useful_features_mask
+    scores_t1 = scores_t1 + [score]
+    print("ROC AUC final score ", i, " ", label_target, " :", score, '\n')
+
+    #mask with found useful features
+    long_useful_features_mask = \
+        np.insert(np.repeat(useful_features_mask[1:], 12), 0, useful_features_mask[0])
+    X_test_t1_useful = X_test_t1[:, long_useful_features_mask]
+    X_t1_useful = X_t1[:, long_useful_features_mask]
+
+    #last fit for current label
+    clf = svm.LinearSVC(C=0.0001, class_weight='balanced', tol=10e-2, verbose=0)
+    clf.fit(X_t1_useful, Y_t1)
+
+    #predict and save
+    Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
+    Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+    Y_test_tot.loc[:, label_target] = Y_test_pred
+
+task1 = sum(scores_t1[:-1]) / len(scores_t1[:-1])
+print("ROC AUC task1 score  ", task1)
+task2 = scores_t1[-1]
+print("ROC AUC task2 score ", task2)
+usefulness_matrix_t1.to_csv('../data/usefulness_matrix_t1.csv', header=True, index=True, float_format='%.7f')
 
 
 
@@ -177,7 +179,6 @@ Y_val_tot = pd.DataFrame(np.zeros([X_val_t3.shape[0], len(all_labels)]), columns
 # ---------------------------------------------------------
 
 labels_target = labels_VS_mean
-# labels_target = ['LABEL_' + select_feature for select_feature in select_features]
 usefulness_matrix_t3 = pd.DataFrame(index=all_features, columns=labels_target)
 scores_t3 = []
 for i in range(0, len(labels_target)):

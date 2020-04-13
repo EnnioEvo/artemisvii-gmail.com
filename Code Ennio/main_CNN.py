@@ -12,8 +12,8 @@ np.random.seed(seed=123)
 # import cleaning_script
 
 # cleaned data import:
-train_features = pd.read_csv("../Code Alberto/data/train_features_clean_all_no_norm.csv")
-test_features = pd.read_csv("../Code Alberto/data/train_features_clean_all_no_norm.csv")
+train_features = pd.read_csv("../Code_Alberto/data/train_features_clean_all_no_norm.csv")
+test_features = pd.read_csv("../Code_Alberto/data/test_features_clean_all_no_norm.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 sample = pd.read_csv("../sample.csv")
 
@@ -40,6 +40,11 @@ all_labels = labels_tests + labels_sepsis + labels_VS_mean
 # Drop pid feature:
 train_features = train_features.drop(labels=["pid","Time"], axis=1)
 test_features = test_features.drop(labels=["pid","Time"], axis=1)
+
+# #shuflle dataset
+# rd_permutation = np.random.permutation(train_features.index)
+# train_features = train_features.reindex(rd_permutation).set_index(np.arange(0, train_features.shape[0], 1))
+# train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0, train_labels.shape[0], 1))
 
 # Definition of test and val data size:
 train_size = 15000

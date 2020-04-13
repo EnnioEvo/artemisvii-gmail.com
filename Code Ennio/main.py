@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
 
-np.random.seed(seed=179)
+np.random.seed(seed=119)
 # from sklearn.metrics import classification_report, confusion_matrix
 
 # ---------------------------------------------------------
@@ -19,17 +19,17 @@ train_features = pd.read_csv("../data/train_features_clean_columned.csv")
 test_features = pd.read_csv("../data/test_features_clean_columned.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 sample = pd.read_csv("../sample.csv")
-stored_usefulness_matrix_t1 = pd.read_csv("../data/usefulness_matrix_t1.csv")
-stored_usefulness_matrix_t3 = pd.read_csv("../data/usefulness_matrix_t3.csv")
+stored_usefulness_matrix_t1 = pd.read_csv("../data/usefulness_matrix_t1_overfitted.csv")
+stored_usefulness_matrix_t3 = pd.read_csv("../data/usefulness_matrix_t3_overfitted.csv")
 
 # features
 patient_characteristics = ["Age"]  # TIME VARIABLE IS EXCLUDED
-vital_signs = ["Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate"]
-tests = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Temp', 'Hgb', 'HCO3', 'BaseExcess',
-         'Fibrinogen', 'Phosphate', 'WBC', 'Creatinine', 'PaCO2', 'AST', 'FiO2',
-         'Platelets', 'SaO2', 'Glucose', 'Magnesium', 'Potassium', 'Calcium',
-         'Alkalinephos', 'Bilirubin_direct', 'Chloride', 'Hct',
-         'Bilirubin_total', 'TroponinI', 'pH']
+vital_signs = ["Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate", 'Temp']
+tests = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Hgb', 'HCO3', 'BaseExcess',
+       'Fibrinogen', 'Phosphate', 'WBC', 'Creatinine', 'PaCO2', 'AST', 'FiO2',
+       'Platelets', 'SaO2', 'Glucose', 'Magnesium', 'Potassium', 'Calcium',
+       'Alkalinephos', 'Bilirubin_direct', 'Chloride', 'Hct',
+       'Bilirubin_total', 'TroponinI', 'pH']
 all_features = patient_characteristics + vital_signs + tests
 N_hours = 12
 houred_features = patient_characteristics + sum(
@@ -48,15 +48,23 @@ all_labels = labels_tests + labels_sepsis + labels_VS_mean
 # Drop pid feature:
 train_features = train_features.drop(labels="pid", axis=1)
 test_features = test_features.drop(labels="pid", axis=1)
+# ---------------------------------------------------------
+# ----------------- SET PARAMETERS ------------------------
+# ---------------------------------------------------------
+features_selection = False
 
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION ------------------------
 # ---------------------------------------------------------
 
+rd_permutation = np.random.permutation(train_features.index)
+train_features = train_features.reindex(rd_permutation).set_index(np.arange(0,train_features.shape[0],1))
+train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0,train_labels.shape[0],1))
+
 # Definition of test and val data size:
 # task 1
 #train_features.reindex(np.random.permutation(train_features.index))
-train_size = 18200
+train_size = 15000
 select_houred_features_t1 = houred_features
 X_t1 = np.array(train_features.loc[0:train_size - 1, select_houred_features_t1])
 X_val_t1 = np.array(train_features.loc[train_size:, select_houred_features_t1])
@@ -116,19 +124,20 @@ for i in range(0, len(labels_target)):
     # keep_rate = 0.6
     # N_useful_features = int(keep_rate * np.max(feature_classific))
     # useful_features_mask = feature_classific <= N_useful_features
-
-    useful_features_mask = np.array(stored_usefulness_matrix_t1[label_target])
-    long_useful_features_mask = np.insert(np.repeat(useful_features_mask[1:],12), 0, useful_features_mask[0])
-    X_t1_useful = X_t1[:, long_useful_features_mask]
-    X_val_t1_useful = X_val_t1[:, long_useful_features_mask]
-    X_test_t1_useful = X_test_t1[:, long_useful_features_mask]
-
-    # X_t1_useful = X_t1
-    # X_val_t1_useful = X_val_t1
-    # X_test_t1_useful = X_test_t1
+    if features_selection:
+        useful_features_mask = np.array(stored_usefulness_matrix_t1[label_target])
+        long_useful_features_mask = np.insert(np.repeat(useful_features_mask[1:],12), 0, useful_features_mask[0])
+        X_t1_useful = X_t1[:, long_useful_features_mask]
+        X_val_t1_useful = X_val_t1[:, long_useful_features_mask]
+        X_test_t1_useful = X_test_t1[:, long_useful_features_mask]
+    else:
+        X_t1_useful = X_t1
+        X_val_t1_useful = X_val_t1
+        X_test_t1_useful = X_test_t1
 
     # fit
     clf = svm.LinearSVC(C=10e-4, class_weight='balanced', tol=10e-3, verbose=0)
+    #clf = svm.SVC(C=10e-4, class_weight='balanced', tol=10e-3, verbose=0, kernel='rbf')
     clf.fit(X_t1_useful, Y_t1)
 
     # # feature selection
@@ -169,11 +178,16 @@ for i in range(0, len(labels_target)):
     Y_t3 = train_labels[label_target].iloc[0:train_size]
     Y_val_t3 = train_labels[label_target].iloc[train_size:]
 
-    useful_features_mask = np.array(stored_usefulness_matrix_t3[label_target])
-    long_useful_features_mask = np.insert(np.repeat(useful_features_mask[1:],12), 0, useful_features_mask[0])
-    X_t3_useful = X_t3[:, long_useful_features_mask]
-    X_val_t3_useful = X_val_t3[:, long_useful_features_mask]
-    X_test_t3_useful = X_test_t3[:, long_useful_features_mask]
+    if features_selection:
+        useful_features_mask = np.array(stored_usefulness_matrix_t3[label_target])
+        long_useful_features_mask = np.insert(np.repeat(useful_features_mask[1:],12), 0, useful_features_mask[0])
+        X_t3_useful = X_t3[:, long_useful_features_mask]
+        X_val_t3_useful = X_val_t3[:, long_useful_features_mask]
+        X_test_t3_useful = X_test_t3[:, long_useful_features_mask]
+    else:
+        X_t3_useful = X_t3
+        X_val_t3_useful = X_val_t3
+        X_test_t3_useful = X_test_t3
 
     # fit
     reg = LinearRegression()
