@@ -1,14 +1,14 @@
 ,LABEL_RRate,LABEL_ABPm,LABEL_SpO2,LABEL_Heartrate
 Age,True,True,True,True
 Heartrate,True,False,True,True
-SpO2,True,True,True,True
+SpO2,True,True,True,False
 ABPs,True,True,True,True
 ABPm,False,True,False,True
 ABPd,False,True,True,False
 RRate,True,True,True,True
 Temp,False,False,True,True
 EtCO2,False,True,True,True
-PTT,False,True,True,False
+PTT,False,True,True,True
 BUN,False,True,True,True
 Lactate,False,False,True,True
 Hgb,False,False,False,False
@@ -18,7 +18,7 @@ Fibrinogen,False,True,True,True
 Phosphate,True,True,True,True
 WBC,True,False,True,True
 Creatinine,True,False,False,True
-PaCO2,False,False,True,True
+PaCO2,False,False,True,False
 AST,False,True,False,False
 FiO2,True,False,False,True
 Platelets,True,False,True,False

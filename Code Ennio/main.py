@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
 
-np.random.seed(seed=119)
+np.random.seed(seed=149)
 # from sklearn.metrics import classification_report, confusion_matrix
 
 # ---------------------------------------------------------
@@ -19,8 +19,8 @@ train_features = pd.read_csv("../data/train_features_clean_columned.csv")
 test_features = pd.read_csv("../data/test_features_clean_columned.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 sample = pd.read_csv("../sample.csv")
-stored_usefulness_matrix_t1 = pd.read_csv("../data/usefulness_matrix_t1_overfitted.csv")
-stored_usefulness_matrix_t3 = pd.read_csv("../data/usefulness_matrix_t3_overfitted.csv")
+stored_usefulness_matrix_t1 = pd.read_csv("../data/usefulness_matrix_t1_dummy.csv")
+stored_usefulness_matrix_t3 = pd.read_csv("../data/usefulness_matrix_t3_dummy.csv")
 
 # features
 patient_characteristics = ["Age"]  # TIME VARIABLE IS EXCLUDED
@@ -51,7 +51,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS ------------------------
 # ---------------------------------------------------------
-features_selection = False
+features_selection = True
 
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION ------------------------

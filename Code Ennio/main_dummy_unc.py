@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
 
-np.random.seed(seed=189)
+np.random.seed(seed=219)
 # from sklearn.metrics import classification_report, confusion_matrix
 
 # ---------------------------------------------------------
@@ -50,7 +50,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS ------------------------
 # ---------------------------------------------------------
-features_selection = True
+features_selection = False
 
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION ------------------------
@@ -76,15 +76,6 @@ X_t3 = np.array(train_features.loc[0:train_size - 1, selected_features_t3])
 X_val_t3 = np.array(train_features.loc[train_size:, selected_features_t3])
 X_test_t3 = np.array(test_features[selected_features_t3])
 
-# Standardize the data
-X_t1 = (X_t1 - np.mean(X_t1, 0)) / np.std(X_t1, 0)
-X_val_t1 = (X_val_t1 - np.mean(X_val_t1, 0)) / np.std(X_val_t1, 0)
-X_test_t1 = (X_test_t1 - np.mean(X_test_t1, 0)) / np.std(X_test_t1, 0)
-
-# Standardize the data
-X_t3 = (X_t3 - np.mean(X_t3, 0)) / np.std(X_t3, 0)
-X_val_t3 = (X_val_t3 - np.mean(X_val_t3, 0)) / np.std(X_val_t3, 0)
-X_test_t3 = (X_test_t3 - np.mean(X_test_t3, 0)) / np.std(X_test_t3, 0)
 
 # add dummy features
 X_t1 = np.column_stack([X_t1, np.array(train_features.loc[0:train_size - 1, dummy_tests])])
@@ -96,6 +87,15 @@ X_t3 = np.column_stack([X_t3, np.array(train_features.loc[0:train_size - 1, dumm
 X_val_t3 = np.column_stack([X_val_t3, np.array(train_features.loc[train_size:, dummy_tests])])
 X_test_t3 = np.column_stack([X_test_t3, np.array(test_features[dummy_tests])])
 
+# Standardize the data
+X_t1 = (X_t1 - np.mean(X_t1, 0)) / np.std(X_t1, 0)
+X_val_t1 = (X_val_t1 - np.mean(X_val_t1, 0)) / np.std(X_val_t1, 0)
+X_test_t1 = (X_test_t1 - np.mean(X_test_t1, 0)) / np.std(X_test_t1, 0)
+
+# Standardize the data
+X_t3 = (X_t3 - np.mean(X_t3, 0)) / np.std(X_t3, 0)
+X_val_t3 = (X_val_t3 - np.mean(X_val_t3, 0)) / np.std(X_val_t3, 0)
+X_test_t3 = (X_test_t3 - np.mean(X_test_t3, 0)) / np.std(X_test_t3, 0)
 
 
 # these dataframe will contain every prediction
