@@ -1,52 +1,58 @@
 import pandas as pd
 import numpy as np
 import math
-#from sklearn import svm
-#from sklearn import datasets
-
-
-# Commento: Attualmente i dati di ogni paziente di tutte le dodici ore sono posti su solo una riga. Sono anche ripetuti i valori ridondanti di 
-# "pid" e "age", che si possono togliere semplicemente cambiando il range di "ind2" nell'inner "for loop"
 
 # Data import from folder
-data_set_x_train = np.array(pd.read_csv("../Code Alberto/data/train_features_clean_all_no_norm.csv"))
-data_set_x_test = np.array(pd.read_csv("../Code Alberto/data/test_features_clean_all_no_norm.csv"))
+X_train = pd.read_csv("../data/train_features_clean_all.csv")
+X_test = pd.read_csv("../data/test_features_clean_all.csv")
 
-#Concatenation of all the data for the 12 hours in data_set_x_train to obtain one single raw for each patient
-N = data_set_x_train.shape[0] #227940
-X_train=np.zeros((math.ceil(N/12),36+34*11)) # 36+34*11 = 410
+# features
+patient_characteristics = ["Age"]  # TIME VARIABLE IS EXCLUDED
+vital_signs = ["Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate", 'Temp']
+tests = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Hgb', 'HCO3', 'BaseExcess',
+         'Fibrinogen', 'Phosphate', 'WBC', 'Creatinine', 'PaCO2', 'AST', 'FiO2',
+         'Platelets', 'SaO2', 'Glucose', 'Magnesium', 'Potassium', 'Calcium',
+         'Alkalinephos', 'Bilirubin_direct', 'Chloride', 'Hct',
+         'Bilirubin_total', 'TroponinI', 'pH']
+dummy_tests = ['dummy_' + test for test in tests]
+standard_features = patient_characteristics + vital_signs + tests
 
-# put "227940" in the range function to stop the iteration of the inner "for cycle" exactly at the last row of tha last patient
-for ind1 in range(0, N, 12):
-    X_temp = np.array([data_set_x_train[ind1][[0,2]]])
-    for ind2 in range(ind1,ind1+12):
-        X_temp=np.array([np.concatenate((X_temp, np.array([data_set_x_train[ind2][3:]])), axis=None)])
-    X_train[int(ind1/12), :] = X_temp
+all_features = ['pid', 'Age'] + dummy_tests + \
+               sum([[feature + str(i + 1) for feature in (tests + vital_signs)] for i in range(12)], [])
+
+reordered_features = ['pid', 'Age'] + \
+               sum( [[test + str(i) for i in range(1,13)] + ['dummy_'+test] for test in tests], []) +\
+                sum( [[VS + str(i) for i in range(1,13)] for VS in vital_signs], [])
 
 
-#Concatenation of all the data for the 12 hours in data_set_x_test to obtain one single raw for each patient
 
-N = data_set_x_test.shape[0] #151968
-X_test=np.zeros((math.ceil(N/12),36+34*11)) # 36+34*11 = 410
+def column_dataset(dataset):
+    # Concatenation of all the data for the 12 hours in data_set_x_train to obtain one single raw for each patient
+    N = dataset.shape[0]
+    X_columned = np.zeros((math.ceil(N / 12),
+                           len(['pid'] + patient_characteristics + dummy_tests) + 12 * len(
+                               tests + vital_signs)))
 
-# put "151968" in the range function to stop the iteration of the inner "for cycle" exactly at the last row of tha last patient
-for ind1 in range(0, N, 12):
-    X_temp = np.array([data_set_x_test[ind1][[0,2]]])
-    for ind2 in range(ind1,ind1+12):
-        X_temp=np.array([np.concatenate((X_temp, np.array([data_set_x_test[ind2][3:]])), axis=None)])
-    X_test[int(ind1/12), :] = X_temp
+    X = np.array(dataset[['pid'] + patient_characteristics + dummy_tests + tests + vital_signs])
+    for i in range(0, N, 12):
+        X_temp = np.array([X[i, 0:2]])
+        X_temp = np.array(
+            [np.concatenate( (X_temp, np.any([X[i:i + 12, 2:2 + len(dummy_tests)]], 1) * 1), axis=None )]
+        )
+        for j in range(i, i + 12):
+            X_temp = np.array(
+                [np.concatenate( (X_temp, np.array([ X[j, 2 + len(dummy_tests):] ])), axis=None )])
+        X_columned[int(j / 12), :] = X_temp
+    return X_columned
 
-# these labels are useful for saving back arrays to dataframes
-labels = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Temp', 'Hgb', 'HCO3', 'BaseExcess',
-       "RRate", 'Fibrinogen', 'Phosphate', 'WBC', 'Creatinine', 'PaCO2', 'AST', 'FiO2',
-       'Platelets', 'SaO2', 'Glucose', "ABPm", 'Magnesium', 'Potassium', "ABPd", 'Calcium',
-       'Alkalinephos', "SpO2", 'Bilirubin_direct', 'Chloride', 'Hct',
-       'Heartrate', 'Bilirubin_total', 'TroponinI', "ABPs", 'pH']
-
-all_labels = ['pid', 'Age'] + sum([ [label + str(i+1) for i in range(12)] for label in labels] ,[])
-
-df_train = pd.DataFrame(X_train, columns=all_labels)
+X_train_columned = column_dataset(X_train)
+df_train = pd.DataFrame(X_train_columned, columns=all_features)
+df_train = df_train[reordered_features]
 df_train.to_csv('../data/train_features_clean_columned.csv', header=True, index=False)
-df_test = pd.DataFrame(X_test, columns=all_labels)
-df_test.to_csv('../data/test_features_clean_columned.csv', header=True, index=False)
+print('X_train saved')
 
+X_test_columned = column_dataset(X_test)
+df_test = pd.DataFrame(X_test_columned, columns=all_features)
+df_test = df_train[reordered_features]
+df_test.to_csv('../data/test_features_clean_columned.csv', header=True, index=False)
+print('X_test saved')

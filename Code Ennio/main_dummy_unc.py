@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
 
-np.random.seed(seed=219)
+np.random.seed(seed=277)
 # from sklearn.metrics import classification_report, confusion_matrix
 
 # ---------------------------------------------------------
@@ -15,12 +15,12 @@ np.random.seed(seed=219)
 # ---------------------------------------------------------
 
 # cleaned data import:
-train_features = pd.read_csv("../data/train_features_clean_mean.csv")
-test_features = pd.read_csv("../data/test_features_clean_mean.csv")
+train_features = pd.read_csv("../data/train_features_clean_wmean.csv")
+test_features = pd.read_csv("../data/test_features_clean_wmean.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 sample = pd.read_csv("../sample.csv")
-stored_usefulness_matrix_t1 = pd.read_csv("../data/usefulness_matrix_t1_dummy.csv", index_col=0)
-stored_usefulness_matrix_t3 = pd.read_csv("../data/usefulness_matrix_t3_dummy.csv", index_col=0)
+stored_usefulness_matrix_t1 = pd.read_csv("../data/feature_selection/usefulness_matrix_t1_sum.csv", index_col=0)
+stored_usefulness_matrix_t3 = pd.read_csv("../data/feature_selection/usefulness_matrix_t3_sum.csv", index_col=0)
 
 # features
 patient_characteristics = ["Age"]  # TIME VARIABLE IS EXCLUDED
@@ -50,55 +50,51 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS ------------------------
 # ---------------------------------------------------------
-features_selection = False
-
+features_selection = True
+threshold = 4
+shuffle = True
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION ------------------------
 # ---------------------------------------------------------
 
-rd_permutation = np.random.permutation(train_features.index)
-train_features = train_features.reindex(rd_permutation).set_index(np.arange(0, train_features.shape[0], 1))
-train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0, train_labels.shape[0], 1))
+if shuffle:
+    rd_permutation = np.random.permutation(train_features.index)
+    train_features = train_features.reindex(rd_permutation).set_index(np.arange(0, train_features.shape[0], 1))
+    train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0, train_labels.shape[0], 1))
 
-# Definition of test and val data size:
+
+def build_set(selected_features, train_size):
+    # Definition of test and val data size:
+    # task 1
+    X = np.array(train_features.loc[0:train_size - 1, selected_features])
+    X_val = np.array(train_features.loc[train_size:, selected_features])
+    X_test = np.array(test_features[selected_features])
+
+    # add dummy features
+    X = np.column_stack([X, np.array(train_features.loc[0:train_size - 1, dummy_tests])])
+    X_val = np.column_stack([X_val, np.array(train_features.loc[train_size:, dummy_tests])])
+    X_test = np.column_stack([X_test, np.array(test_features[dummy_tests])])
+
+    # Standardize the data
+    X = (X - np.mean(X, 0)) / np.std(X, 0)
+    X_val = (X_val - np.mean(X_val, 0)) / np.std(X_val, 0)
+    X_test = (X_test - np.mean(X_test, 0)) / np.std(X_test, 0)
+
+    return X, X_val, X_test
+
+
+# Build sets
 # task 1
 train_size = 15000
 selected_features_t1 = standard_features
-X_t1 = np.array(train_features.loc[0:train_size - 1, selected_features_t1])
-X_val_t1 = np.array(train_features.loc[train_size:, selected_features_t1])
-X_test_t1 = np.array(test_features[selected_features_t1])
+X_t1, X_val_t1, X_test_t1 = build_set(selected_features_t1, train_size)
 
 # task3
-# select_features_t3 = ['LABEL_RRate', 'LABEL_ABPm', 'LABEL_SpO2', 'LABEL_Heartrate']
-# select_features_t3 = ['Heartrate']
+train_size = 15000
 selected_features_t3 = selected_features_t1
-X_t3 = np.array(train_features.loc[0:train_size - 1, selected_features_t3])
-X_val_t3 = np.array(train_features.loc[train_size:, selected_features_t3])
-X_test_t3 = np.array(test_features[selected_features_t3])
+X_t3, X_val_t3, X_test_t3 = build_set(selected_features_t3, train_size)
 
-
-# add dummy features
-X_t1 = np.column_stack([X_t1, np.array(train_features.loc[0:train_size - 1, dummy_tests])])
-X_val_t1 = np.column_stack([X_val_t1, np.array(train_features.loc[train_size:, dummy_tests])])
-X_test_t1 = np.column_stack([X_test_t1, np.array(test_features[dummy_tests])])
-
-# add dummy features
-X_t3 = np.column_stack([X_t3, np.array(train_features.loc[0:train_size - 1, dummy_tests])])
-X_val_t3 = np.column_stack([X_val_t3, np.array(train_features.loc[train_size:, dummy_tests])])
-X_test_t3 = np.column_stack([X_test_t3, np.array(test_features[dummy_tests])])
-
-# Standardize the data
-X_t1 = (X_t1 - np.mean(X_t1, 0)) / np.std(X_t1, 0)
-X_val_t1 = (X_val_t1 - np.mean(X_val_t1, 0)) / np.std(X_val_t1, 0)
-X_test_t1 = (X_test_t1 - np.mean(X_test_t1, 0)) / np.std(X_test_t1, 0)
-
-# Standardize the data
-X_t3 = (X_t3 - np.mean(X_t3, 0)) / np.std(X_t3, 0)
-X_val_t3 = (X_val_t3 - np.mean(X_val_t3, 0)) / np.std(X_val_t3, 0)
-X_test_t3 = (X_test_t3 - np.mean(X_test_t3, 0)) / np.std(X_test_t3, 0)
-
-
-# these dataframe will contain every prediction
+#Variable for storing prediction
 Y_test_tot = pd.DataFrame(np.zeros([X_test_t3.shape[0], len(all_labels)]),
                           columns=all_labels)  # predictions for test set
 Y_val_tot = pd.DataFrame(np.zeros([X_val_t3.shape[0], len(all_labels)]), columns=all_labels)  # predictions for val set
@@ -108,31 +104,20 @@ Y_val_tot = pd.DataFrame(np.zeros([X_val_t3.shape[0], len(all_labels)]), columns
 # ---------------------------------------------------------
 
 labels_target = labels_tests + ['LABEL_Sepsis']
-# labels_target = ['LABEL_BaseExcess','LABEL_EtCO2','LABEL_SaO2']
-# labels_target = ['LABEL_BaseExcess', 'LABEL_EtCO2']
-# labels_target = ['LABEL_SaO2']
-# labels_target = ['LABEL_Sepsis']
 scores_t1 = []
 for i in range(0, len(labels_target)):
     label_target = labels_target[i]
     Y_t1 = train_labels[label_target].iloc[0:train_size]
     Y_val_t1 = train_labels[label_target].iloc[train_size:]
 
-    # # find class_weights
-    # weight0 = (Y_t1.shape[0] + Y_val_t1.shape[0]) / (sum(Y_t1 != 0) + sum(Y_val_t1 != 0) + 1)
-    # weight1 = (Y_t1.shape[0] + Y_val_t1.shape[0]) / (sum(Y_t1 == 0) + sum(Y_val_t1 == 0) + 1)
-    # class_weights = {0: weight0, 1: weight1}
-
-    # read the classifics for usefulness
-
-    # feature_classific = np.array(stored_usefulness_matrix[label_target])
-    # keep_rate = 0.6
-    # N_useful_features = int(keep_rate * np.max(feature_classific))
-    # useful_features_mask = feature_classific <= N_useful_features
+    # find class_weights
+    weight0 = (Y_t1.shape[0] + Y_val_t1.shape[0]) / (sum(Y_t1 != 0) + sum(Y_val_t1 != 0) + 1)
+    weight1 = (Y_t1.shape[0] + Y_val_t1.shape[0]) / (sum(Y_t1 == 0) + sum(Y_val_t1 == 0) + 1)
+    class_weights = {0: weight0, 1: weight1}
 
     if features_selection:
         stored_usefulness_matrix_t1 = stored_usefulness_matrix_t1.reindex(standard_features)
-        useful_features_mask = np.array(stored_usefulness_matrix_t1[label_target])
+        useful_features_mask = np.array(stored_usefulness_matrix_t1[label_target]) >= threshold
         long_useful_features_mask = np.concatenate(
             (useful_features_mask[:len(vital_signs) + len(tests) + 1], useful_features_mask[len(vital_signs) + 1:])
         )
@@ -148,11 +133,6 @@ for i in range(0, len(labels_target)):
     clf = svm.LinearSVC(C=10e-4, class_weight='balanced', tol=10e-3, verbose=0)
     # clf = svm.SVC(C=10e-4, class_weight='balanced', tol=10e-3, verbose=0, kernel='rbf')
     clf.fit(X_t1_useful, Y_t1)
-
-    # # feature selection
-    # selector = RFE(clf, 1, step=1, verbose=1)
-    # selector = selector.fit(X_t1, Y_t1)
-    # usefulness_matrix[label_target] = selector.ranking_
 
     # predict and save into dataframe
     Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
@@ -188,7 +168,7 @@ for i in range(0, len(labels_target)):
 
     if features_selection:
         stored_usefulness_matrix_t3 = stored_usefulness_matrix_t3.reindex(standard_features)
-        useful_features_mask = np.array(stored_usefulness_matrix_t3[label_target])
+        useful_features_mask = np.array(stored_usefulness_matrix_t3[label_target]) >= threshold
         long_useful_features_mask = np.concatenate(
             (useful_features_mask[:len(vital_signs) + len(tests) + 1], useful_features_mask[len(vital_signs) + 1:])
         )

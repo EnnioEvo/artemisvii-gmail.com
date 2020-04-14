@@ -67,6 +67,7 @@ def build_set(selected_features, train_size):
     X_val = (X_val - np.mean(X_val, 0)) / np.std(X_val, 0)
     X_test = (X_test - np.mean(X_test, 0)) / np.std(X_test, 0)
 
+
     return X, X_val, X_test
 
 
@@ -275,5 +276,5 @@ for k in range(10):
     print("ROC AUC task1 score  ", task1)
     task2 = scores_t1[-1]
     print("ROC AUC task2 score ", task2)
-    usefulness_matrix_t1.to_csv('../data/usefulness_matrix_t1_dummy_' + k + '.csv', header=True, index=True, float_format='%.7f')
+    usefulness_matrix_t1.to_csv('../data/feature_selection/usefulness_matrix_t1_dummy_' + k + '.csv', header=True, index=True, float_format='%.7f')
 
