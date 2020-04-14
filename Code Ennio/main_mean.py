@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
 
-np.random.seed(seed=277)
+np.random.seed(seed=247)
 # from sklearn.metrics import classification_report, confusion_matrix
 
 # ---------------------------------------------------------
@@ -70,15 +70,16 @@ def build_set(selected_features, train_size):
     X_val = np.array(train_features.loc[train_size:, selected_features])
     X_test = np.array(test_features[selected_features])
 
+    # Standardize the data
+    X = (X - np.mean(X, 0)) / np.std(X, 0)
+    X_val = (X_val - np.mean(X_val, 0)) / np.std(X_val, 0)
+    X_test = (X_test - np.mean(X_test, 0)) / np.std(X_test, 0)
+
     # add dummy features
     X = np.column_stack([X, np.array(train_features.loc[0:train_size - 1, dummy_tests])])
     X_val = np.column_stack([X_val, np.array(train_features.loc[train_size:, dummy_tests])])
     X_test = np.column_stack([X_test, np.array(test_features[dummy_tests])])
 
-    # Standardize the data
-    X = (X - np.mean(X, 0)) / np.std(X, 0)
-    X_val = (X_val - np.mean(X_val, 0)) / np.std(X_val, 0)
-    X_test = (X_test - np.mean(X_test, 0)) / np.std(X_test, 0)
 
     return X, X_val, X_test
 
@@ -114,6 +115,7 @@ for i in range(0, len(labels_target)):
     weight0 = (Y_t1.shape[0] + Y_val_t1.shape[0]) / (sum(Y_t1 != 0) + sum(Y_val_t1 != 0) + 1)
     weight1 = (Y_t1.shape[0] + Y_val_t1.shape[0]) / (sum(Y_t1 == 0) + sum(Y_val_t1 == 0) + 1)
     class_weights = {0: weight0, 1: weight1}
+    #class_weights = dict(zip())
 
     if features_selection:
         stored_usefulness_matrix_t1 = stored_usefulness_matrix_t1.reindex(standard_features)

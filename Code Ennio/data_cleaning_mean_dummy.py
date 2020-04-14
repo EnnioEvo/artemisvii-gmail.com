@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from progress.bar import IncrementalBar
 
 # Data import
 train_features = pd.read_csv("../data/train_features.csv")
