@@ -6,7 +6,7 @@ from sklearn import linear_model
 import sklearn.metrics as skmetrics
 
 from sklearn.linear_model import LinearRegression
-from sklearn.linear_model import Lasso
+from sklearn.linear_model import Lasso, ElasticNet
 
 from sklearn.preprocessing import StandardScaler
 from sklearn import preprocessing
@@ -127,7 +127,7 @@ print(Y_test_1)
 #print('timer:', (time()-start)/Ntrain * 1000)
 
 ###################################################################################
-features_considered = ['Age', "Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate", 'Temp','EtCO2', 'PTT', 'BUN', 'Lactate', 'Hgb', 'HCO3', 'BaseExcess', 'Fibrinogen', 'Phosphate', 'WBC', 'Creatinine', 'PaCO2', 'AST', 'FiO2', 'Platelets', 'SaO2', 'Glucose', 'Magnesium', 'Potassium', 'Calcium', 'Alkalinephos', 'Bilirubin_direct', 'Chloride', 'Hct', 'Bilirubin_total', 'TroponinI', 'pH']
+features_considered = ['Age', "Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate", 'Temp']
 
 train_features_task_2 = np.array(data_set_train[features_considered].loc[:])
 N = 227940
@@ -186,7 +186,7 @@ for ind2 in range(1,5):
     #clf = svm.LinearSVR(max_iter=1000)
     #clf.fit(X_train_subtask3, np.ravel(Y_train))
 
-    reg = LinearRegression()
+    reg = ElasticNet()
     reg.fit(X_train_subtask3, np.ravel(Y_train))
 
     #reg = Lasso(alpha=0.01)
