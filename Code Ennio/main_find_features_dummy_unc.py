@@ -8,8 +8,9 @@ from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
 import copy
 
-np.random.seed(seed=247)
+np.random.seed(seed=277)
 # from sklearn.metrics import classification_report, confusion_matrix
+
 
 # ---------------------------------------------------------
 # ------------ DATA IMPORT AND DEFINITIONS ----------------
@@ -52,6 +53,8 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 epochs = 10
 margin = 1e-4
+examinated_features = standard_features + diff_features
+
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION ------------------------
 # ---------------------------------------------------------
@@ -74,6 +77,9 @@ def build_set(selected_features, train_size):
     X_val = (X_val - np.mean(X_val, 0)) / np.std(X_val, 0)
     X_test = (X_test - np.mean(X_test, 0)) / np.std(X_test, 0)
 
+    X[np.isnan(X)] = 0
+    X_val[np.isnan((X_val))] = 0
+    X_test[np.isnan(X_test)] = 0
 
     return X, X_val, X_test
 
@@ -93,7 +99,7 @@ for k in range(epochs):
     train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0, train_labels.shape[0], 1))
 
     X_t1, X_val_t1, X_test_t1 = build_set(selected_features_t1, train_size)
-    usefulness_matrix_t1 = pd.DataFrame(index=standard_features, columns=labels_target)
+    usefulness_matrix_t1 = pd.DataFrame(index=examinated_features, columns=labels_target)
     scores_t1 = []
     for i in range(0, len(labels_target)):
         label_target = labels_target[i]
@@ -110,14 +116,14 @@ for k in range(epochs):
         score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
         print("Removed: Nothing", "\nscore ", label_target, " :", score)
 
-        useful_features_mask = np.repeat([True], len(standard_features))
+        useful_features_mask = np.repeat([True], len(examinated_features))
         for _ in range(10):
             useful_features_mask_temp = useful_features_mask
-            for j in range(0, len(standard_features)):
+            for j in range(0, len(examinated_features)):
                 # build a new mask
                 new_useful_features_mask = copy.deepcopy(useful_features_mask)
                 new_useful_features_mask[j] = ~new_useful_features_mask[j]
-                useful_features = [feature for feature, mask in zip(standard_features, new_useful_features_mask) if
+                useful_features = [feature for feature, mask in zip(examinated_features, new_useful_features_mask) if
                                    mask]
                 useful_features_augmented = sum(
                     [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
@@ -139,7 +145,7 @@ for k in range(epochs):
 
                 # score
                 new_score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
-                print("Removed: ", standard_features[j], "\nscore ", label_target, " :", new_score)
+                #print("Removed: ", examinated_features[j], "\nscore ", label_target, " :", new_score)
                 #print()
                 if new_score > score + margin:
                     score = new_score
@@ -154,7 +160,7 @@ for k in range(epochs):
         print("ROC AUC final score ", i, " ", label_target, " :", score, '\n')
 
         # mask with found useful features
-        useful_features = [feature for feature, mask in zip(standard_features, new_useful_features_mask) if
+        useful_features = [feature for feature, mask in zip(examinated_features, new_useful_features_mask) if
                            mask]
         useful_features_augmented = sum(
             [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
@@ -196,7 +202,7 @@ for k in range(epochs):
     selected_features_t3 = standard_features + dummy_tests + diff_features
     X_t3, X_val_t3, X_test_t3 = build_set(selected_features_t3, train_size)
 
-    usefulness_matrix_t3 = pd.DataFrame(index=standard_features, columns=labels_target)
+    usefulness_matrix_t3 = pd.DataFrame(index=examinated_features, columns=labels_target)
     scores_t3 = []
     for i in range(0, len(labels_target)):
         # get the set corresponding tu the feature
@@ -215,22 +221,22 @@ for k in range(epochs):
         score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
         print("R2 score initial features ", i, " ", label_target, " :", score)
 
-        useful_features_mask = np.repeat([True], len(standard_features))
+        useful_features_mask = np.repeat([True], len(examinated_features))
         for _ in range(10):
             useful_features_mask_temp = useful_features_mask
-            for j in range(0, len(standard_features)):
+            for j in range(len(examinated_features)):
                 # build a new mask
                 new_useful_features_mask = copy.deepcopy(useful_features_mask)
                 new_useful_features_mask[j] = ~new_useful_features_mask[j]
-                useful_features = [feature for feature, mask in zip(standard_features, new_useful_features_mask) if
+                useful_features = [feature for feature, mask in zip(examinated_features, new_useful_features_mask) if
                                    mask]
                 useful_features_augmented = sum(
-                    [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
-                                            [feature for feature in useful_features if feature in vital_signs] + \
-                                            sum([sum(
-                                                [[feature + suffix] for feature in useful_features if
-                                                 feature in vital_signs],
-                                                []) for suffix in diff_features_suffixes], [])
+                    [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) \
+                                            + [feature for feature in useful_features if feature in vital_signs+ diff_features] \
+                                            # + sum([sum(
+                                            #     [[feature + suffix] for feature in useful_features if
+                                            #      feature in vital_signs],
+                                            #     []) for suffix in diff_features_suffixes], [])
                 X_t3_useful = X_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
                 X_val_t3_useful = X_val_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
                 X_test_t3_useful = X_test_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
@@ -264,11 +270,11 @@ for k in range(epochs):
                            mask]
         useful_features_augmented = sum(
             [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
-                                    [feature for feature in useful_features if feature in vital_signs] + \
-                                    sum([sum(
-                                        [[feature + suffix] for feature in useful_features if
-                                         feature in vital_signs],
-                                        []) for suffix in diff_features_suffixes], [])
+                                    [feature for feature in useful_features if feature in vital_signs + diff_features] \
+                                    # + sum([sum(
+                                    #     [[feature + suffix] for feature in useful_features if
+                                    #      feature in vital_signs],
+                                    #     []) for suffix in diff_features_suffixes], [])
         X_t3_useful = X_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
         X_val_t3_useful = X_val_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
 
