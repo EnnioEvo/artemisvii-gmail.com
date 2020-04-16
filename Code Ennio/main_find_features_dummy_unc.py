@@ -183,6 +183,7 @@ for k in range(epochs):
     print("ROC AUC task2 score ", task2)
     usefulness_matrix_t1_sum = usefulness_matrix_t1_sum + (usefulness_matrix_t1 == 0) * -1 + (
             usefulness_matrix_t1 == 1) * 1
+usefulness_matrix_t1_sum.to_csv('../data/feature_selection/usefulness_matrix_t1_sum.csv', header=True, index=True, float_format='%.1f')
 
 # ---------------------------------------------------------
 # ------------------- TRAINING TASK 3 --------------------
@@ -295,7 +296,6 @@ for k in range(epochs):
             usefulness_matrix_t3 == 1) * 1
 
 
-usefulness_matrix_t1_sum.to_csv('../data/feature_selection/usefulness_matrix_t1_sum.csv', header=True, index=True, float_format='%.1f')
 usefulness_matrix_t3_sum.to_csv('../data/feature_selection/usefulness_matrix_t3_sum.csv', header=True, index=True, float_format='%.1f')
 
 
