@@ -16,8 +16,8 @@ np.random.seed(seed=179)
 # ---------------------------------------------------------
 
 # cleaned data import:
-train_features = pd.read_csv("../data/train_features_clean_mean.csv")
-test_features = pd.read_csv("../data/test_features_clean_mean.csv")
+train_features = pd.read_csv("../data/train_features_clean_wmean_diff.csv")
+test_features = pd.read_csv("../data/test_features_clean_wmean_diff.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 sample = pd.read_csv("../sample.csv")
 # features
@@ -30,7 +30,10 @@ tests = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Hgb', 'HCO3', 'BaseExcess',
          'Bilirubin_total', 'TroponinI', 'pH']
 dummy_tests = ['dummy_' + test for test in tests]
 standard_features = patient_characteristics + vital_signs + tests
-all_features = standard_features + dummy_tests
+diff_features_suffixes = ['_n_extrema', '_diff_mean', '_diff_median', '_diff_max', '_diff_min']
+diff_features = sum(
+    [[VS + diff_features_suffix for VS in vital_signs] for diff_features_suffix in diff_features_suffixes], [])
+all_features = standard_features + dummy_tests + diff_features
 
 # labels
 labels_tests = ['LABEL_BaseExcess', 'LABEL_Fibrinogen', 'LABEL_AST',
@@ -53,14 +56,14 @@ def build_set(selected_features, train_size):
 
     # Definition of test and val data size:
     # task 1
-    X = np.array(train_features.loc[0:train_size - 1, selected_features])
-    X_val = np.array(train_features.loc[train_size:, selected_features])
-    X_test = np.array(test_features[selected_features])
+    X = train_features.loc[0:train_size - 1, selected_features]
+    X_val = train_features.loc[train_size:, selected_features]
+    X_test = test_features[selected_features]
 
-    # add dummy features
-    X = np.column_stack([X, np.array(train_features.loc[0:train_size - 1, dummy_tests])])
-    X_val = np.column_stack([X_val, np.array(train_features.loc[train_size:, dummy_tests])])
-    X_test = np.column_stack([X_test, np.array(test_features[dummy_tests])])
+    # # add dummy features
+    # X = np.column_stack([X, np.array(train_features.loc[0:train_size - 1, dummy_tests])])
+    # X_val = np.column_stack([X_val, np.array(train_features.loc[train_size:, dummy_tests])])
+    # X_test = np.column_stack([X_test, np.array(test_features[dummy_tests])])
 
     # Standardize the data
     X = (X - np.mean(X, 0)) / np.std(X, 0)
@@ -85,7 +88,7 @@ for k in range(10):
     train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0, train_labels.shape[0], 1))
 
     train_size = 15000
-    selected_features_t3 = standard_features
+    selected_features_t3 = standard_features + dummy_tests
     X_t3, X_val_t3, X_test_t3 = build_set(selected_features_t3, train_size)
 
     usefulness_matrix_t3 = pd.DataFrame(index=standard_features, columns=labels_target)
@@ -115,13 +118,19 @@ for k in range(10):
                 # build a new mask
                 new_useful_features_mask = copy.deepcopy(useful_features_mask)
                 new_useful_features_mask[j] = ~new_useful_features_mask[j]
-                long_useful_features_mask = np.concatenate(
-                    (new_useful_features_mask[:len(vital_signs) + len(tests) + 1], new_useful_features_mask[len(vital_signs) + 1:])
-                )
+                useful_features = [feature for feature, mask in zip(standard_features, new_useful_features_mask) if
+                                   mask]
+                useful_features_augmented = sum(
+                    [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
+                                            [feature for feature in useful_features if feature in vital_signs] + \
+                                            sum([sum(
+                                                [[feature + suffix] for feature in useful_features if
+                                                 feature in vital_signs],
+                                                []) for suffix in diff_features_suffixes], [])
+                X_t3_useful = X_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
+                X_val_t3_useful = X_val_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
+                X_test_t3_useful = X_test_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
 
-                # mask the dataset
-                X_t3_useful = X_t3[:, long_useful_features_mask]
-                X_val_t3_useful = X_val_t3[:, long_useful_features_mask]
 
                 # fit
                 reg = LinearRegression()
@@ -133,7 +142,7 @@ for k in range(10):
                 # score
                 new_score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
                 print("Removed: ", standard_features[j], "\nscore ", label_target, " :", new_score)
-                if new_score > score:
+                if new_score > score + 1e-3:
                     score = new_score
                     useful_features_mask = copy.deepcopy(new_useful_features_mask)
             if np.all(
@@ -156,18 +165,21 @@ for k in range(10):
         print("ROC AUC final score ", i, " ", label_target, " :", score, '\n')
 
         # mask with found useful features
-        long_useful_features_mask = np.concatenate(
-            (new_useful_features_mask[:len(vital_signs) + len(tests) + 1], new_useful_features_mask[len(vital_signs) + 1:])
-        )
-        X_test_t3_useful = X_test_t3[:, long_useful_features_mask]
-        X_t3_useful = X_t3[:, long_useful_features_mask]
+        useful_features = [feature for feature, mask in zip(standard_features, new_useful_features_mask) if
+                           mask]
+        useful_features_augmented = sum(
+            [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
+                                    [feature for feature in useful_features if feature in vital_signs] + \
+                                    sum([sum(
+                                        [[feature + suffix] for feature in useful_features if
+                                         feature in vital_signs],
+                                        []) for suffix in diff_features_suffixes], [])
+        X_t3_useful = X_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
+        X_val_t3_useful = X_val_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
 
         # last fit for current label
         reg = LinearRegression()
         reg.fit(X_t3_useful, Y_t3)
-
-        # predict
-        Y_test_pred = reg.predict(X_test_t3_useful).flatten()
 
     scores_t3 = [score_t3 for score_t3 in scores_t3]
 
@@ -179,7 +191,7 @@ for k in range(10):
     print("Task3 total score: ", task3)
     # print("Total score = ", np.mean([task1, task2, task3]))
 
-    usefulness_matrix_t3.to_csv('../data/feature_selection/usefulness_matrix_t3_dummy_'+ k + '.csv', header=True, index=True, float_format='%.7f')
+    usefulness_matrix_t3.to_csv('../data/feature_selection/usefulness_matrix_t3_dummy_'+ str(k) + '.csv', header=True, index=True, float_format='%.7f')
 
 # --------------------------------------------------------
 # ------------------- TRAINING TASK 1 --------------------
@@ -220,12 +232,17 @@ for k in range(10):
                 # build a new mask
                 new_useful_features_mask = copy.deepcopy(useful_features_mask)
                 new_useful_features_mask[j] = ~new_useful_features_mask[j]
-                long_useful_features_mask = np.concatenate(
-                    (new_useful_features_mask[:len(vital_signs) + len(tests) + 1], new_useful_features_mask[len(vital_signs) + 1:])
-                )
-                # mask the dataset
-                X_t1_useful = X_t1[:, long_useful_features_mask]
-                X_val_t1_useful = X_val_t1[:, long_useful_features_mask]
+                useful_features = [feature for feature, mask in zip(standard_features, new_useful_features_mask) if
+                                   mask]
+                useful_features_augmented = sum(
+                    [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
+                                            [feature for feature in useful_features if feature in vital_signs] + \
+                                            sum([sum(
+                                                [[feature + suffix] for feature in useful_features if
+                                                 feature in vital_signs],
+                                                []) for suffix in diff_features_suffixes], [])
+                X_t1_useful = X_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
+                X_val_t1_useful = X_val_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
 
                 # fit
                 clf = svm.LinearSVC(C=1e-4, class_weight='balanced', tol=10e-2, verbose=0)
@@ -239,7 +256,7 @@ for k in range(10):
                 new_score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
                 print("Removed: ", standard_features[j], "\nscore ", label_target, " :", new_score)
                 print()
-                if new_score > score:
+                if new_score > score + 1e-3:
                     score = new_score
                     useful_features_mask = copy.deepcopy(new_useful_features_mask)
             if np.all(
@@ -258,23 +275,26 @@ for k in range(10):
         print("ROC AUC final score ", i, " ", label_target, " :", score, '\n')
 
         # mask with found useful features
-        long_useful_features_mask = np.concatenate(
-            (new_useful_features_mask[:len(vital_signs) + len(tests) + 1], new_useful_features_mask[len(vital_signs) + 1:])
-        )
-        X_test_t1_useful = X_test_t1[:, long_useful_features_mask]
-        X_t1_useful = X_t1[:, long_useful_features_mask]
+        useful_features = [feature for feature, mask in zip(standard_features, new_useful_features_mask) if
+                           mask]
+        useful_features_augmented = sum(
+            [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
+                                    [feature for feature in useful_features if feature in vital_signs] + \
+                                    sum([sum(
+                                        [[feature + suffix] for feature in useful_features if
+                                         feature in vital_signs],
+                                        []) for suffix in diff_features_suffixes], [])
+        X_t1_useful = X_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
+        X_val_t1_useful = X_val_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
 
         # last fit for current label
         clf = svm.LinearSVC(C=1e-4, class_weight='balanced', tol=10e-2, verbose=0)
         clf.fit(X_t1_useful, Y_t1)
 
-        # predict and save
-        Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
-        Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
 
     task1 = sum(scores_t1[:-1]) / len(scores_t1[:-1])
     print("ROC AUC task1 score  ", task1)
     task2 = scores_t1[-1]
     print("ROC AUC task2 score ", task2)
-    usefulness_matrix_t1.to_csv('../data/feature_selection/usefulness_matrix_t1_dummy_' + k + '.csv', header=True, index=True, float_format='%.7f')
+    usefulness_matrix_t1.to_csv('../data/feature_selection/usefulness_matrix_t1_dummy_' + str(k) + '.csv', header=True, index=True, float_format='%.7f')
 

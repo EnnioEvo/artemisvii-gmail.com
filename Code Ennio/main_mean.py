@@ -157,7 +157,7 @@ for i in range(0, len(labels_target)):
 
     score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
     scores_t1 = scores_t1 + [score]
-    print("ROC AUC -- score ", i, " ", label_target, " :", score)
+    print("ROC AUC -- score ", i, " ", label_target, " :", np.float(score))
 
 task1 = sum(scores_t1[:-1]) / len(scores_t1[:-1])
 print("ROC AUC task1 score  ", task1)
