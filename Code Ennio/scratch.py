@@ -52,8 +52,6 @@ print()
 pass
 
 
-
-
 def build_usefulness_sum():
     usefulness_matrixes_t1 = []
     usefulness_matrixes_t3 = []

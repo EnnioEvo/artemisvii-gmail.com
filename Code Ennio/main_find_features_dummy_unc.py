@@ -8,7 +8,7 @@ from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
 import copy
 
-np.random.seed(seed=179)
+np.random.seed(seed=247)
 # from sklearn.metrics import classification_report, confusion_matrix
 
 # ---------------------------------------------------------
@@ -47,7 +47,11 @@ all_labels = labels_tests + labels_sepsis + labels_VS_mean
 # Drop pid feature:
 train_features = train_features.drop(labels="pid", axis=1)
 test_features = test_features.drop(labels="pid", axis=1)
-
+# ---------------------------------------------------------
+# ----------------- SET PARAMETERS ------------------------
+# ---------------------------------------------------------
+epochs = 10
+margin = 1e-4
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION ------------------------
 # ---------------------------------------------------------
@@ -77,11 +81,12 @@ def build_set(selected_features, train_size):
 # --------------------------------------------------------
 # ------------------- TRAINING TASK 1 --------------------
 # ---------------------------------------------------------
-
+usefulness_matrixes_t1 = []
+usefulness_matrix_t1_sum = 0
 labels_target = labels_tests + ['LABEL_Sepsis']
-train_size = 15000
-selected_features_t1 = standard_features
-for k in range(10):
+train_size = int(train_features.shape[0] * 0.8)
+selected_features_t1 = standard_features + dummy_tests + diff_features
+for k in range(epochs):
     # shuffle
     rd_permutation = np.random.permutation(train_features.index)
     train_features = train_features.reindex(rd_permutation).set_index(np.arange(0, train_features.shape[0], 1))
@@ -135,20 +140,14 @@ for k in range(10):
                 # score
                 new_score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
                 print("Removed: ", standard_features[j], "\nscore ", label_target, " :", new_score)
-                print()
-                if new_score > score + 1e-3:
+                #print()
+                if new_score > score + margin:
                     score = new_score
                     useful_features_mask = copy.deepcopy(new_useful_features_mask)
             if np.all(
                     useful_features_mask_temp == useful_features_mask):  # if the list of useful features has not changed exit
                 break
 
-        useful_features = [d for d, s in zip(standard_features, useful_features_mask) if s]
-        print('\nUseful features for label ', label_target, ':\n')
-        print(useful_features)
-        useless_features = [d for d, s in zip(standard_features, ~useful_features_mask) if s]
-        print('\nUseless features for label ', label_target, ':\n')
-        print(useless_features)
 
         usefulness_matrix_t1[label_target] = useful_features_mask
         scores_t1 = scores_t1 + [score]
@@ -176,21 +175,25 @@ for k in range(10):
     print("ROC AUC task1 score  ", task1)
     task2 = scores_t1[-1]
     print("ROC AUC task2 score ", task2)
-    usefulness_matrix_t1.to_csv('../data/feature_selection/usefulness_matrix_t1_dummy_' + str(k) + '.csv', header=True, index=True, float_format='%.7f')
+    usefulness_matrix_t1_sum = usefulness_matrix_t1_sum + (usefulness_matrix_t1 == 0) * -1 + (
+            usefulness_matrix_t1 == 1) * 1
 
 # ---------------------------------------------------------
 # ------------------- TRAINING TASK 3 --------------------
 # ---------------------------------------------------------
 
+usefulness_matrixes_t3 = []
+usefulness_matrix_t3_sum = 0
+
 labels_target = labels_VS_mean
-for k in range(10):
+for k in range(epochs):
     # shuffle
     rd_permutation = np.random.permutation(train_features.index)
     train_features = train_features.reindex(rd_permutation).set_index(np.arange(0, train_features.shape[0], 1))
     train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0, train_labels.shape[0], 1))
 
-    train_size = 15000
-    selected_features_t3 = standard_features + dummy_tests
+    train_size = int(train_features.shape[0] * 0.8)
+    selected_features_t3 = standard_features + dummy_tests + diff_features
     X_t3, X_val_t3, X_test_t3 = build_set(selected_features_t3, train_size)
 
     usefulness_matrix_t3 = pd.DataFrame(index=standard_features, columns=labels_target)
@@ -210,7 +213,6 @@ for k in range(10):
         # score
         Y_val_pred = reg.predict(X_val_t3).flatten()
         score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
-        scores_t3 = scores_t3 + [score]
         print("R2 score initial features ", i, " ", label_target, " :", score)
 
         useful_features_mask = np.repeat([True], len(standard_features))
@@ -243,22 +245,13 @@ for k in range(10):
 
                 # score
                 new_score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
-                print("Removed: ", standard_features[j], "\nscore ", label_target, " :", new_score)
-                if new_score > score + 1e-3:
+                #print("Removed: ", standard_features[j], "\nscore ", label_target, " :", new_score)
+                if new_score > score + margin:
                     score = new_score
                     useful_features_mask = copy.deepcopy(new_useful_features_mask)
             if np.all(
                     useful_features_mask_temp == useful_features_mask):  # if the list of useful features has not changed exit
                 break
-
-        # print useful and useless features
-        useful_features = [d for d, s in zip(standard_features, useful_features_mask) if s]
-        print('\nUseful features for label ', label_target, ':\n')
-        print(useful_features)
-        useless_features = [d for d, s in zip(standard_features, ~useful_features_mask) if s]
-        print('\nUseless features for label ', label_target, ':\n')
-        print(useless_features)
-
         # upload usefulness matrix
         usefulness_matrix_t3[label_target] = useful_features_mask
 
@@ -292,5 +285,11 @@ for k in range(10):
     task3 = np.mean(scores_t3)
     print("Task3 total score: ", task3)
     # print("Total score = ", np.mean([task1, task2, task3]))
+    usefulness_matrix_t3_sum = usefulness_matrix_t3_sum + (usefulness_matrix_t3 == 0) * -1 + (
+            usefulness_matrix_t3 == 1) * 1
 
-    usefulness_matrix_t3.to_csv('../data/feature_selection/usefulness_matrix_t3_dummy_'+ str(k) + '.csv', header=True, index=True, float_format='%.7f')
+
+usefulness_matrix_t1_sum.to_csv('../data/feature_selection/usefulness_matrix_t1_sum.csv', header=True, index=True, float_format='%.1f')
+usefulness_matrix_t3_sum.to_csv('../data/feature_selection/usefulness_matrix_t3_sum.csv', header=True, index=True, float_format='%.1f')
+
+
