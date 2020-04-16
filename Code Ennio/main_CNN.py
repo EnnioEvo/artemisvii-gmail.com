@@ -12,8 +12,8 @@ np.random.seed(seed=123)
 # import cleaning_script
 
 # cleaned data import:
-train_features = pd.read_csv("../Code_Alberto/data/train_features_clean_all_no_norm.csv")
-test_features = pd.read_csv("../Code_Alberto/data/test_features_clean_all_no_norm.csv")
+train_features = pd.read_csv("../data/train_features_clean_all.csv")
+test_features = pd.read_csv("../data/test_features_clean_all.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 sample = pd.read_csv("../sample.csv")
 
@@ -38,8 +38,8 @@ labels_VS_mean = ['LABEL_RRate', 'LABEL_ABPm', 'LABEL_SpO2', 'LABEL_Heartrate']
 all_labels = labels_tests + labels_sepsis + labels_VS_mean
 
 # Drop pid feature:
-train_features = train_features.drop(labels=["pid","Time"], axis=1)
-test_features = test_features.drop(labels=["pid","Time"], axis=1)
+train_features = train_features.drop(labels="pid", axis=1)
+test_features = test_features.drop(labels="pid", axis=1)
 
 # #shuflle dataset
 # rd_permutation = np.random.permutation(train_features.index)
