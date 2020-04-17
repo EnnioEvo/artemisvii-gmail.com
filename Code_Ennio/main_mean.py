@@ -172,7 +172,6 @@ for i in range(0, len(labels_target)):
         kernel_dict = {'poly2': ('poly', 2), 'poly3': ('poly', 3), 'rbf': ('rbf', 0)}
         kernel, degree = kernel_dict[best_kernels.at[label_target, 'kernel']]
         C = best_kernels.at[label_target, 'C']
-        C = 1e-3
         clf = svm.SVC(C=C, kernel=kernel, degree=degree, tol=1e-4, class_weight='balanced', verbose=0)
 
     clf.fit(X_t1_useful, Y_t1)
