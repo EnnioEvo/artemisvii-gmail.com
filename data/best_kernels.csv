@@ -7,6 +7,6 @@ LABEL_Bilirubin_total,rbf,1.0
 LABEL_Lactate,rbf,1.0
 LABEL_TroponinI,poly1,1.0
 LABEL_SaO2,rbf,10.0
-LABEL_Bilirubin_direct,linear,0.001
+LABEL_Bilirubin_direct,poly1,0.001
 LABEL_EtCO2,poly3,1.0
 LABEL_Sepsis,rbf,1.0
