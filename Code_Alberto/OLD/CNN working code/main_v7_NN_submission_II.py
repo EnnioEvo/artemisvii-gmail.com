@@ -13,8 +13,8 @@ np.random.seed(seed=123)
 #import cleaning_script
 
 #cleaned data import:
-train_features = pd.read_csv("../../data/train_features_clean_all.csv")
-test_features_pre = pd.read_csv("../../data/test_features_clean_all.csv")
+train_features = pd.read_csv("../../../data/train_features_clean_all.csv")
+test_features_pre = pd.read_csv("../../../data/test_features_clean_all.csv")
 train_labels = pd.read_csv("../../data/train_labels.csv")
 
 # Informatons on the headers -- Extracting information:
@@ -56,9 +56,9 @@ print("######### TASK 1 #########")
 epochs_t1 = 5
 # NEED TO FEED THE NETWORK WITH SIZE (N_PATIENTS, N_HOURS, N_TESTS, 1) IMPUT (N_HOURS, N_TESTS, 1)
 N_patients_train = np.array(X_old.shape[0]/12).astype(int) ## ONLY IN VALIDATION PHASE
-X = np.array(X_old).reshape((N_patients_train, 12, 35))
+X = np.array(X_old).reshape((N_patients_train, 12, X_old.shape[1]))
 print(X.shape)
-input_shape =(12, 35)
+input_shape =(12, X_old.shape[1])
 num_classes = 1
 
 model_t1 =Sequential()
@@ -84,7 +84,7 @@ Y = keras.utils.to_categorical(Y_t1, 2)
 model_t1.fit(X, Y_t1, epochs=epochs_t1)
 
 N_patients_val = np.array(X_val.shape[0]/12).astype(int) ## ONLY IN VALIDATION PHASE
-X_val = np.array(X_val).reshape((N_patients_val, 12, 35))
+X_val = np.array(X_val).reshape((N_patients_val, 12, X_old.shape[1]))
 Y_val_pred = model_t1.predict(X_val) 
 print(Y_val_pred)
 

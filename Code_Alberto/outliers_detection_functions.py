@@ -9,7 +9,6 @@ def _get_percentiles(data_set, min, max):
                                      axis=0, interpolation='higher')
     return perc
 
-percentiles = _get_percentiles(train_features, 0, 99.95)  
 
 def clean_data_set(data_set, labels, percentiles, tests, others, h_obs):
     N_patients = np.array(data_set.shape[0]/12).astype(int)
@@ -42,10 +41,12 @@ def clean_data_set(data_set, labels, percentiles, tests, others, h_obs):
             non_outliers = np.concatenate((non_outliers, patient_matr), axis =0)
             non_outliers_others = np.concatenate((non_outliers_others, patient_matr_others), axis=0)
             labels_no_out = np.append(labels_no_out, np.array(labels_np[index,:]).reshape(1,16), axis=0)
-        if patient%1000 == 0: print(patient)
+        if patient%1000 == 0:
+            print(patient)
         index = index + 1
 
-    data_set_new_outliers = np.column_stack((outliers_others,outliers)) 
+
+    data_set_new_outliers = np.column_stack((outliers_others,outliers))
     data_set_new_non_outliers = np.column_stack((non_outliers_others,non_outliers))
     outliers = pd.DataFrame(data=data_set_new_outliers[1:,:], columns=data_set.columns)
     non_outliers = pd.DataFrame(data=data_set_new_non_outliers[1:,:], columns=data_set.columns)
@@ -53,5 +54,7 @@ def clean_data_set(data_set, labels, percentiles, tests, others, h_obs):
     labels_out = pd.DataFrame(data=labels_out[1:,:], columns=labels.columns)
     return outliers, non_outliers, labels_out, labels_no_out
 
-others = patient_characteristics + vital_signs
-outliers, non_outliers, labels_out, labels_no_out = clean_data_set(train_features, train_labels, percentiles, tests, others, h_obs=12)
+
+# percentiles = _get_percentiles(train_features, 0, 99.95)
+# others = patient_characteristics + vital_signs
+# outliers, non_outliers, labels_out, labels_no_out = clean_data_set(train_features, train_labels, percentiles, tests, others, h_obs=12)
