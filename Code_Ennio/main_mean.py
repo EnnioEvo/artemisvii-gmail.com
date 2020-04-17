@@ -6,7 +6,6 @@ from sklearn import linear_model
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
-from Code_Ennio.outliers_detection_functions import _get_percentiles, clean_data_set
 
 np.random.seed(seed=333)
 # from sklearn.metrics import classification_report, confusion_matrix
@@ -20,8 +19,9 @@ train_features = pd.read_csv("../data/train_features_clean_wmean_2_diff.csv")
 test_features = pd.read_csv("../data/test_features_clean_wmean_2_diff.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 sample = pd.read_csv("../sample.csv")
-stored_usefulness_matrix_t1 = pd.read_csv("../data/feature_selection/usefulness_matrix_t1_sum.csv", index_col=0)
-stored_usefulness_matrix_t3 = pd.read_csv("../data/feature_selection/usefulness_matrix_t3_sum.csv", index_col=0)
+stored_usefulness_matrix_t1 = pd.read_csv("../data/feature_selection/usefulness_matrix_t1_sum_backup.csv", index_col=0)
+stored_usefulness_matrix_t3 = pd.read_csv("../data/feature_selection/usefulness_matrix_t3_sum_backup.csv", index_col=0)
+best_kernels = pd.read_csv("../data/best_kernels.csv", index_col=0)
 
 # features
 patient_characteristics = ["Age"]  # TIME VARIABLE IS EXCLUDED
@@ -60,18 +60,28 @@ features_selection = True
 remove_outliers = True
 threshold = 4
 shuffle = True
+improve_kernels = True
+
 
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION ------------------------
 # ---------------------------------------------------------
+def _get_percentiles(data_set, min, max):
+    perc = pd.DataFrame(columns=data_set.columns)
+    perc.loc[0, :] = np.nanpercentile(np.array(data_set), min,
+                                      axis=0, interpolation='lower')
+    perc.loc[1, :] = np.nanpercentile(np.array(data_set), max,
+                                      axis=0, interpolation='higher')
+    return perc
+
 
 if remove_outliers:
     percentiles = _get_percentiles(train_features, 0.01, 99.99)
     percentiles = percentiles[tests]
     for feature in percentiles.columns:
         mask = np.multiply(
-            train_features[feature]>percentiles[feature][0],
-            train_features[feature]<percentiles[feature][1])
+            train_features[feature] > percentiles[feature][0],
+            train_features[feature] < percentiles[feature][1])
         train_features = train_features[mask]
         train_labels = train_labels[mask]
 
@@ -79,7 +89,6 @@ if shuffle:
     rd_permutation = np.random.permutation(train_features.index)
     train_features = train_features.reindex(rd_permutation).set_index(np.arange(0, train_features.shape[0], 1))
     train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0, train_labels.shape[0], 1))
-
 
 
 def build_set(selected_features, train_size):
@@ -113,7 +122,7 @@ train_size = int(train_features.shape[0] * 0.8)
 selected_features_t1 = standard_features + dummy_tests
 if use_diff:
     selected_features_t1 = selected_features_t1 + diff_features
-#selected_features_t2 = vital_signs + diff_features
+# selected_features_t2 = vital_signs + diff_features
 X_t1, X_val_t1, X_test_t1 = build_set(selected_features_t1, train_size)
 
 # task3
@@ -121,7 +130,7 @@ train_size = int(train_features.shape[0] * 0.8)
 selected_features_t3 = selected_features_t1
 X_t3, X_val_t3, X_test_t3 = build_set(selected_features_t3, train_size)
 
-#Variable for storing prediction
+# Variable for storing prediction
 Y_test_tot = pd.DataFrame(np.zeros([X_test_t3.shape[0], len(all_labels)]),
                           columns=all_labels)  # predictions for test set
 Y_val_tot = pd.DataFrame(np.zeros([X_val_t3.shape[0], len(all_labels)]), columns=all_labels)  # predictions for val set
@@ -137,12 +146,6 @@ for i in range(0, len(labels_target)):
     Y_t1 = train_labels[label_target].iloc[0:train_size]
     Y_val_t1 = train_labels[label_target].iloc[train_size:]
 
-    # # find class_weights
-    # weight0 = (Y_t1.shape[0] + Y_val_t1.shape[0]) / (sum(Y_t1 != 0) + sum(Y_val_t1 != 0) + 1)
-    # weight1 = (Y_t1.shape[0] + Y_val_t1.shape[0]) / (sum(Y_t1 == 0) + sum(Y_val_t1 == 0) + 1)
-    # class_weights = {0: weight0, 1: weight1}
-    # #class_weights = dict(zip())
-
     if features_selection:
         usefulness_column = stored_usefulness_matrix_t1[label_target].sort_values(ascending=False)
         useful_features_mask = np.array(usefulness_column) >= threshold
@@ -150,9 +153,9 @@ for i in range(0, len(labels_target)):
         useful_features_augmented = sum(
             [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) \
                                     + [feature for feature in useful_features if feature in vital_signs + diff_features] \
-                                    # + sum([sum(
-                                    #     [[feature + suffix] for feature in useful_features if feature in vital_signs],
-                                    #     []) for suffix in diff_features_suffixes], [])
+            # + sum([sum(
+        #     [[feature + suffix] for feature in useful_features if feature in vital_signs],
+        #     []) for suffix in diff_features_suffixes], [])
         X_t1_useful = X_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
         X_val_t1_useful = X_val_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
         X_test_t1_useful = X_test_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
@@ -162,8 +165,15 @@ for i in range(0, len(labels_target)):
         X_test_t1_useful = X_test_t1
 
     # fit
-    clf = svm.LinearSVC(C=10e-4, class_weight='balanced', tol=10e-3, verbose=0)
-    # clf = svm.SVC(C=10e-4, class_weight='balanced', tol=10e-3, verbose=0, kernel='rbf')
+
+    if not improve_kernels or best_kernels.at[label_target, 'kernel'] == 'poly1':
+        clf = svm.LinearSVC(C=1e-3, tol=1e-2, class_weight='balanced', verbose=0)
+    else:
+        kernel_dict = {'poly2': ('poly', 2), 'poly3': ('poly3', 3), 'rbf': ('rbf', 0)}
+        kernel, degree = kernel_dict[best_kernels.at[label_target, 'kernel']]
+        C = best_kernels.at[label_target, 'C']
+        clf = svm.SVC(C=C, kernel=kernel, degree=degree, tol=1e-4, class_weight='balanced', verbose=0)
+
     clf.fit(X_t1_useful, Y_t1)
 
     # predict and save into dataframe
@@ -183,14 +193,11 @@ print("ROC AUC task1 score  ", task1)
 task2 = scores_t1[-1]
 print("ROC AUC task2 score ", task2)
 
-# usefulness_matrix.to_csv('../data/usefulness_matrix.csv', header=True, index=True, float_format='%.7f')
-
 # ---------------------------------------------------------
 # ------------------- TRAINING TASK 3 --------------------
 # ---------------------------------------------------------
 
 labels_target = labels_VS_mean
-# labels_target = ['LABEL_' + select_feature for select_feature in select_features]
 scores_t3 = []
 for i in range(0, len(labels_target)):
     # get the set corresponding tu the feature
@@ -205,9 +212,9 @@ for i in range(0, len(labels_target)):
         useful_features_augmented = sum(
             [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) \
                                     + [feature for feature in useful_features if feature in vital_signs + diff_features] \
-                                    # + sum([sum(
-                                    #     [[feature + suffix] for feature in useful_features if feature in vital_signs],
-                                    #     []) for suffix in diff_features_suffixes], [])
+            # + sum([sum(
+        #     [[feature + suffix] for feature in useful_features if feature in vital_signs],
+        #     []) for suffix in diff_features_suffixes], [])
         X_t3_useful = X_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
         X_val_t3_useful = X_val_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
         X_test_t3_useful = X_test_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
@@ -217,10 +224,10 @@ for i in range(0, len(labels_target)):
         X_test_t3_useful = X_test_t3
 
     # fit
-    reg = LinearRegression()
-    reg.fit(X_t3_useful, Y_t3)
-    # reg = Lasso(alpha=2e-1)
-    # reg.fit(X_t3_useful, np.ravel(Y_t3))
+    # reg = LinearRegression()
+    # reg.fit(X_t3_useful, Y_t3)
+    reg = Lasso(alpha=2e-1)
+    reg.fit(X_t3_useful, np.ravel(Y_t3))
 
     # predict and save into dataframe
     Y_test_pred = reg.predict(X_test_t3_useful).flatten()

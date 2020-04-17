@@ -33,25 +33,36 @@ stored_usefulness_matrix_t3 = pd.read_csv("../data/feature_selection/usefulness_
 test_features_raw = pd.read_csv("../data/test_features.csv")
 test_features_mean = pd.read_csv("../data/test_features_clean_wmean.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
-
+kernel_selection = pd.read_csv("../data/kernel_selection.csv").sort_values(by=['LABEL','score'],ascending=False)
 #build train mean raw
 
 
-#data analysis
-usefulness_column = stored_usefulness_matrix_t1[labels_sepsis].sort_values(labels_sepsis, ascending = [0])
-useful_features_mask = np.array(usefulness_column) >= 4
-useful_features = [feature for feature,mask in zip(usefulness_column.index, useful_features_mask) if mask]
-useful_features_augmented = sum([ [feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
-    [feature for feature in useful_features if feature in vital_signs]
-train_raw = train_raw[useful_features]
-train_clean_all = train_clean_all[useful_features_augmented]
-train_clean_mean = train_clean_mean[useful_features_augmented]
-train_dummy = train_clean_wmean[ [feature for feature in useful_features_augmented if feature in dummy_tests] ]
-relevance_train = np.dot(train_dummy,np.array(usefulness_column)[:10])
-relevance_train_frame = pd.DataFrame(index= train_clean_wmean.index, columns = ['Relevance'], data=relevance_train)
-print()
-pass
+def build_kernel_selector():
+    best_kernels = pd.DataFrame(index=labels_tests + labels_sepsis, columns=['kernel', 'C'])
+    for label in labels_tests + labels_sepsis:
+        kernel_classific = kernel_selection[kernel_selection['LABEL']==label].sort_values(by=['score'],ascending=False)
+        best_kernels.at[label,['kernel', 'C']] = kernel_classific[['kernel', 'C']].iloc[0]
+    return best_kernels
 
+best_kernels = build_kernel_selector()
+best_kernels.to_csv('../data/best_kernels.csv', header=True, index=True)
+print()
+
+
+def data_analysis():
+    usefulness_column = stored_usefulness_matrix_t1[labels_sepsis].sort_values(labels_sepsis, ascending = [0])
+    useful_features_mask = np.array(usefulness_column) >= 4
+    useful_features = [feature for feature,mask in zip(usefulness_column.index, useful_features_mask) if mask]
+    useful_features_augmented = sum([ [feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
+        [feature for feature in useful_features if feature in vital_signs]
+    #train_raw = train_raw[useful_features]
+    #train_clean_all = train_clean_all[useful_features_augmented]
+    #train_clean_mean = train_clean_mean[useful_features_augmented]
+    train_dummy = train_clean_wmean[ [feature for feature in useful_features_augmented if feature in dummy_tests] ]
+    relevance_train = np.dot(train_dummy,np.array(usefulness_column)[:10])
+    relevance_train_frame = pd.DataFrame(index= train_clean_wmean.index, columns = ['Relevance'], data=relevance_train)
+    print()
+    pass
 
 def build_usefulness_sum():
     usefulness_matrixes_t1 = []
@@ -73,4 +84,5 @@ def build_usefulness_sum():
 
     usefulness_matrix_t1_sum.to_csv('../data/feature_selection/usefulness_matrix_t1_sum' + '.csv', header=True, index=True)
     usefulness_matrix_t3_sum.to_csv('../data/feature_selection/usefulness_matrix_t3_sum' + '.csv', header=True, index=True)
+
 

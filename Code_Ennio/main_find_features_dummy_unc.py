@@ -165,12 +165,12 @@ for k in range(epochs):
         useful_features = [feature for feature, mask in zip(examinated_features, new_useful_features_mask) if
                            mask]
         useful_features_augmented = sum(
-            [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
-                                    [feature for feature in useful_features if feature in vital_signs + diff_features] + \
-                                    sum([sum(
-                                        [[feature + suffix] for feature in useful_features if
-                                         feature in vital_signs],
-                                        []) for suffix in diff_features_suffixes], [])
+            [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) \
+                                    + [feature for feature in useful_features if feature in vital_signs + diff_features] \
+            # + sum([sum(
+        #     [[feature + suffix] for feature in useful_features if
+        #      feature in vital_signs],
+        #     []) for suffix in diff_features_suffixes], [])
         X_t1_useful = X_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
         X_val_t1_useful = X_val_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
 

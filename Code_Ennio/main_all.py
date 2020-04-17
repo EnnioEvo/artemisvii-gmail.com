@@ -19,8 +19,8 @@ train_features = pd.read_csv("../data/train_features_clean_columned.csv")
 test_features = pd.read_csv("../data/test_features_clean_columned.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 sample = pd.read_csv("../sample.csv")
-stored_usefulness_matrix_t1 = pd.read_csv("../data/usefulness_matrix_t1_dummy.csv")
-stored_usefulness_matrix_t3 = pd.read_csv("../data/usefulness_matrix_t3_dummy.csv")
+stored_usefulness_matrix_t1 = pd.read_csv("../data/feature_selection/usefulness_matrix_t1_sum_old.csv", index_col = 0)
+stored_usefulness_matrix_t3 = pd.read_csv("../data/feature_selection/usefulness_matrix_t3_sum_old.csv", index_col = 0)
 
 # features
 patient_characteristics = ["Age"]  # TIME VARIABLE IS EXCLUDED
@@ -33,10 +33,12 @@ tests = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Hgb', 'HCO3', 'BaseExcess',
 dummy_tests = ['dummy_' + test for test in tests]
 
 all_features = patient_characteristics + vital_signs + tests
-N_hours = 8
+N_hours_test = 1
+N_hours_VS = 4
+
 houred_features = ['Age'] + \
-               sum( [[test + str(i) for i in range(13 - N_hours,13)] + ['dummy_'+test] for test in tests], []) +\
-                sum( [[VS + str(i) for i in range(13 - N_hours,13)] for VS in vital_signs], [])
+               sum( [[test + str(i) for i in range(13 - N_hours_test,13)] + ['dummy_'+test] for test in tests], []) +\
+                sum( [[VS + str(i) for i in range(13 - N_hours_VS,13)] for VS in vital_signs], [])
 
 # labels
 labels_tests = ['LABEL_BaseExcess', 'LABEL_Fibrinogen', 'LABEL_AST',
@@ -55,6 +57,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 features_selection = True
 shuffle = False
+threshold = 4
 
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION ------------------------
@@ -68,22 +71,22 @@ if shuffle:
 # task 1
 #train_features.reindex(np.random.permutation(train_features.index))
 train_size = 15000
-select_houred_features_t1 = houred_features
-X_t1 = np.array(train_features.loc[0:train_size - 1, select_houred_features_t1])
-X_val_t1 = np.array(train_features.loc[train_size:, select_houred_features_t1])
-X_test_t1 = np.array(test_features[select_houred_features_t1])
+selected_houred_features_t1 = houred_features
+X_t1 = train_features.loc[0:train_size - 1, selected_houred_features_t1]
+X_val_t1 = train_features.loc[train_size:, selected_houred_features_t1]
+X_test_t1 = test_features[selected_houred_features_t1]
 
 # task3
 # select_features_t3 = ['LABEL_RRate', 'LABEL_ABPm', 'LABEL_SpO2', 'LABEL_Heartrate']
 # select_features_t3 = ['Heartrate']
-select_features_t3 = patient_characteristics + vital_signs
-select_houred_features_t3 = sum([[houred_feature + str(i) for i in range(13 - N_hours, 13)]
-                                 for houred_feature in select_features_t3], [])
+# selected_features_t3 =  tests + vital_signs
+# select_houred_features_t3 = patient_characteristics + sum([[selected_feature + str(i) for i in range(13 - N_hours, 13)]
+#                                  for selected_feature in selected_features_t3], [])
 
-select_houred_features_t3 = houred_features
-X_t3 = np.array(train_features.loc[0:train_size - 1, select_houred_features_t3])
-X_val_t3 = np.array(train_features.loc[train_size:, select_houred_features_t3])
-X_test_t3 = np.array(test_features[select_houred_features_t3])
+selected_houred_features_t3 = houred_features
+X_t3 = train_features.loc[0:train_size - 1, selected_houred_features_t3]
+X_val_t3 = train_features.loc[train_size:, selected_houred_features_t3]
+X_test_t3 = test_features[selected_houred_features_t3]
 
 # Standardize the data
 X_t1 = (X_t1 - np.mean(X_t1, 0)) / np.std(X_t1, 0)
@@ -114,15 +117,14 @@ for i in range(0, len(labels_target)):
     Y_val_t3 = train_labels[label_target].iloc[train_size:]
 
     if features_selection:
-        useful_features_mask = np.array(stored_usefulness_matrix_t3[label_target])
-        long_useful_features_mask = np.insert(np.repeat(useful_features_mask[1:],12), 0, useful_features_mask[0])
-        long_useful_features_mask = np.concatenate( ([useful_features_mask[0]],
-                                                     np.repeat(useful_features_mask[1 + len(vital_signs):], N_hours + 1),
-                                                     np.repeat(useful_features_mask[1:1+len(vital_signs)], N_hours),
-                                                     ) )
-        X_t3_useful = X_t3[:, long_useful_features_mask]
-        X_val_t3_useful = X_val_t3[:, long_useful_features_mask]
-        X_test_t3_useful = X_test_t3[:, long_useful_features_mask]
+        usefulness_column = stored_usefulness_matrix_t3[label_target].sort_values(ascending=False)
+        useful_features_mask = np.array(usefulness_column) >= threshold
+        useful_features = [feature for feature, mask in zip(usefulness_column.index, useful_features_mask) if mask]
+        useful_features_augmented = \
+            sum([[s for s in selected_houred_features_t3 if feature in s] for feature in useful_features],[])
+        X_t3_useful = X_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
+        X_val_t3_useful = X_val_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
+        X_test_t3_useful = X_test_t3[list(set(useful_features_augmented) & set(X_t3.columns))]
     else:
         X_t3_useful = X_t3
         X_val_t3_useful = X_val_t3
@@ -154,27 +156,21 @@ print("Task3 score = ", task3)
 
 labels_target = labels_tests + ['LABEL_Sepsis']
 scores_t1 = []
-usefulness_matrix = pd.DataFrame(index=select_houred_features_t1, columns=labels_target)
 
 for i in range(0, len(labels_target)):
     label_target = labels_target[i]
     Y_t1 = train_labels[label_target].iloc[0:train_size]
     Y_val_t1 = train_labels[label_target].iloc[train_size:]
 
-    # # find class_weights
-    # weight0 = (Y_t1.shape[0] + Y_val_t1.shape[0]) / (sum(Y_t1 != 0) + sum(Y_val_t1 != 0) + 1)
-    # weight1 = (Y_t1.shape[0] + Y_val_t1.shape[0]) / (sum(Y_t1 == 0) + sum(Y_val_t1 == 0) + 1)
-    # class_weights = {0: weight0, 1: weight1}
-
     if features_selection:
-        useful_features_mask = np.array(stored_usefulness_matrix_t1[label_target])
-        long_useful_features_mask = np.concatenate(([useful_features_mask[0]],
-                                                    np.repeat(useful_features_mask[1 + len(vital_signs):], N_hours + 1),
-                                                    np.repeat(useful_features_mask[1:1 + len(vital_signs)], N_hours),
-                                                    ))
-        X_t1_useful = X_t1[:, long_useful_features_mask]
-        X_val_t1_useful = X_val_t1[:, long_useful_features_mask]
-        X_test_t1_useful = X_test_t1[:, long_useful_features_mask]
+        usefulness_column = stored_usefulness_matrix_t1[label_target].sort_values(ascending=False)
+        useful_features_mask = np.array(usefulness_column) >= threshold
+        useful_features = [feature for feature, mask in zip(usefulness_column.index, useful_features_mask) if mask]
+        useful_features_augmented = \
+            sum([[s for s in selected_houred_features_t1 if feature in s] for feature in useful_features],[])
+        X_t1_useful = X_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
+        X_val_t1_useful = X_val_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
+        X_test_t1_useful = X_test_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
     else:
         X_t1_useful = X_t1
         X_val_t1_useful = X_val_t1
