@@ -51,7 +51,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS ------------------------
 # ---------------------------------------------------------
-epochs = 10
+epochs = 1
 margin = 1e-4
 examinated_features = standard_features + diff_features
 
@@ -115,8 +115,10 @@ for k in range(epochs):
         # score
         score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
         print("Removed: Nothing", "\nscore ", label_target, " :", score)
+        score = 0
 
-        useful_features_mask = np.repeat([True], len(examinated_features))
+        useful_features_mask = np.repeat([False], len(examinated_features))
+        useful_features_mask[-1] = True
         for _ in range(10):
             useful_features_mask_temp = useful_features_mask
             for j in range(0, len(examinated_features)):
@@ -127,11 +129,11 @@ for k in range(epochs):
                                    mask]
                 useful_features_augmented = sum(
                     [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
-                                            [feature for feature in useful_features if feature in vital_signs] + \
-                                            sum([sum(
-                                                [[feature + suffix] for feature in useful_features if
-                                                 feature in vital_signs],
-                                                []) for suffix in diff_features_suffixes], [])
+                                            [feature for feature in useful_features if feature in vital_signs + diff_features] \
+                                            # + sum([sum(
+                                            #     [[feature + suffix] for feature in useful_features if
+                                            #      feature in vital_signs],
+                                            #     []) for suffix in diff_features_suffixes], [])
                 X_t1_useful = X_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
                 X_val_t1_useful = X_val_t1[list(set(useful_features_augmented) & set(X_t1.columns))]
 
@@ -164,7 +166,7 @@ for k in range(epochs):
                            mask]
         useful_features_augmented = sum(
             [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) + \
-                                    [feature for feature in useful_features if feature in vital_signs] + \
+                                    [feature for feature in useful_features if feature in vital_signs + diff_features] + \
                                     sum([sum(
                                         [[feature + suffix] for feature in useful_features if
                                          feature in vital_signs],
@@ -221,8 +223,9 @@ for k in range(epochs):
         Y_val_pred = reg.predict(X_val_t3).flatten()
         score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
         print("R2 score initial features ", i, " ", label_target, " :", score)
-
-        useful_features_mask = np.repeat([True], len(examinated_features))
+        score = 0
+        useful_features_mask = np.repeat([False], len(examinated_features))
+        useful_features_mask[-1] = True
         for _ in range(10):
             useful_features_mask_temp = useful_features_mask
             for j in range(len(examinated_features)):

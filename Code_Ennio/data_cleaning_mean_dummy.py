@@ -25,7 +25,7 @@ def nanweightedmean(array, weights):
     consistent_array = array[~np.isnan(array)]
     consistent_weights = weights[~np.isnan(array)]
 
-    return np.dot(consistent_array, consistent_weights)/sum(consistent_weights)
+    return np.dot(consistent_array, consistent_weights) / sum(consistent_weights)
 
 
 def cleaning(data_set):
@@ -46,7 +46,7 @@ def cleaning(data_set):
             if np.all(np.isnan(VS_column[i * 12:(i + 1) * 12])):
                 new_VS_column[i] = VS_mean
             else:
-                new_VS_column[i] = nanweightedmean(VS_column[i * 12:(i + 1) * 12], np.arange(1,13))
+                new_VS_column[i] = nanweightedmean(VS_column[i * 12:(i + 1) * 12], np.arange(1, 13))
         data_set_new[VS] = new_VS_column
 
     # tests
@@ -55,27 +55,17 @@ def cleaning(data_set):
         test_mean = np.nanmean(test_column)
         new_test_column = np.zeros([N_patients, 1])
         dummy_test_column = np.zeros([N_patients, 1])
-        min_column = np.zeros([N_patients, 1])
-        max_column = np.zeros([N_patients, 1])
         for i in range(N_patients):
             if np.all(np.isnan(test_column[i * 12:(i + 1) * 12])):
                 new_test_column[i] = test_mean
                 dummy_test_column[i] = 0
-                min_column[i] = test_mean
-                max_column[i] = test_mean
             else:
-                array = test_column[i * 12:(i + 1) * 12]
-                my_mean = nanweightedmean(test_column[i * 12:(i + 1) * 12], np.ones([12,1]))
-                mean = np.nanmean(test_column[i * 12:(i + 1) * 12])
-                new_test_column[i] = np.nanmean(test_column[i * 12:(i + 1) * 12])
-                dummy_test_column[i] = 1
-                min_column[i] = np.nanmin(test_column[i * 12:(i + 1) * 12])
-                max_column[i] = np.nanmax(test_column[i * 12:(i + 1) * 12])
+                array_i = test_column[i * 12:(i + 1) * 12]
+                new_test_column[i] = np.nanmean(array_i)
+                dummy_test_column[i] = np.sum((~np.isnan(array_i)) * 1)
 
         data_set_new[test] = new_test_column
         data_set_new['dummy_' + test] = dummy_test_column
-        data_set_new['min_' + test] = min_column
-        data_set_new['max_' + test] = max_column
 
     return data_set_new
 

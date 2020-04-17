@@ -8,7 +8,7 @@ from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
 from Code_Ennio.outliers_detection_functions import _get_percentiles, clean_data_set
 
-np.random.seed(seed=137)
+np.random.seed(seed=333)
 # from sklearn.metrics import classification_report, confusion_matrix
 
 # ---------------------------------------------------------
@@ -32,14 +32,12 @@ tests = ['EtCO2', 'PTT', 'BUN', 'Lactate', 'Hgb', 'HCO3', 'BaseExcess',
          'Alkalinephos', 'Bilirubin_direct', 'Chloride', 'Hct',
          'Bilirubin_total', 'TroponinI', 'pH']
 dummy_tests = ['dummy_' + test for test in tests]
-min_tests = ['min_' + test for test in tests]
-max_tests = ['max_' + test for test in tests]
 
 standard_features = patient_characteristics + vital_signs + tests
 diff_features_suffixes = ['_n_extrema', '_diff_mean', '_diff_median', '_diff_max', '_diff_min']
 diff_features = sum(
     [[VS + diff_features_suffix for VS in vital_signs] for diff_features_suffix in diff_features_suffixes], [])
-all_features = standard_features + dummy_tests + diff_features + min_tests + max_tests
+all_features = standard_features + dummy_tests + diff_features
 
 # labels
 labels_tests = ['LABEL_BaseExcess', 'LABEL_Fibrinogen', 'LABEL_AST',
@@ -57,7 +55,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS ------------------------
 # ---------------------------------------------------------
-use_diff = True
+use_diff = False
 features_selection = True
 remove_outliers = True
 threshold = 4
@@ -68,7 +66,7 @@ shuffle = True
 # ---------------------------------------------------------
 
 if remove_outliers:
-    percentiles = _get_percentiles(train_features, 0.01, 99.95)
+    percentiles = _get_percentiles(train_features, 0.01, 99.99)
     percentiles = percentiles[tests]
     for feature in percentiles.columns:
         mask = np.multiply(
@@ -112,7 +110,7 @@ def build_set(selected_features, train_size):
 # Build sets
 # task 1
 train_size = int(train_features.shape[0] * 0.8)
-selected_features_t1 = standard_features + dummy_tests + min_tests + max_tests
+selected_features_t1 = standard_features + dummy_tests
 if use_diff:
     selected_features_t1 = selected_features_t1 + diff_features
 #selected_features_t2 = vital_signs + diff_features
@@ -150,7 +148,7 @@ for i in range(0, len(labels_target)):
         useful_features_mask = np.array(usefulness_column) >= threshold
         useful_features = [feature for feature, mask in zip(usefulness_column.index, useful_features_mask) if mask]
         useful_features_augmented = sum(
-            [[feature, 'dummy_' + feature, 'min_' + feature, 'max_'+feature] for feature in useful_features if feature in tests], []) \
+            [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) \
                                     + [feature for feature in useful_features if feature in vital_signs + diff_features] \
                                     # + sum([sum(
                                     #     [[feature + suffix] for feature in useful_features if feature in vital_signs],
@@ -205,7 +203,7 @@ for i in range(0, len(labels_target)):
         useful_features_mask = np.array(usefulness_column) >= threshold
         useful_features = [feature for feature, mask in zip(usefulness_column.index, useful_features_mask) if mask]
         useful_features_augmented = sum(
-            [[feature, 'dummy_' + feature,'min_' + feature, 'max_'+feature] for feature in useful_features if feature in tests], []) \
+            [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) \
                                     + [feature for feature in useful_features if feature in vital_signs + diff_features] \
                                     # + sum([sum(
                                     #     [[feature + suffix] for feature in useful_features if feature in vital_signs],
