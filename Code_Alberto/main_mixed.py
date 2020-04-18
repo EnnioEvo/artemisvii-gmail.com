@@ -3,7 +3,7 @@ import numpy as np
 import sklearn.metrics as skmetrics
 from sklearn import svm
 from sklearn import linear_model
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
@@ -62,7 +62,7 @@ threshold = 4
 remove_outliers = True
 shuffle = True
 improve_kernels = False
-submit = False
+submit = True
 
 
 # ---------------------------------------------------------
@@ -169,7 +169,7 @@ for i in range(0, len(labels_target)):
 
     if not improve_kernels or best_kernels.at[label_target, 'kernel'] == 'poly1':
         #clf = svm.LinearSVC(C=1e-3, tol=1e-2, class_weight='balanced', verbose=0)
-        clf = RandomForestClassifier(n_estimators=1000, class_weight="balanced_subsample")
+        clf = RandomForestClassifier(n_estimators=2000, class_weight="balanced_subsample") #top = 1000
     else:
         kernel_dict = {'poly2': ('poly', 2), 'poly3': ('poly', 3), 'rbf': ('rbf', 0)}
         kernel, degree = kernel_dict[best_kernels.at[label_target, 'kernel']]
@@ -299,8 +299,12 @@ for i in range(0, len(labels_target)):
         X_test_t3_useful = X_test_t3
 
     # fit
-    reg = LinearRegression()
-    reg.fit(X_t3_useful, Y_t3)
+    #reg = LinearRegression()
+    #reg.fit(X_t3_useful, Y_t3)
+
+    reg = RandomForestRegressor(n_estimators=500)
+    reg.fit(X_t3_useful, np.ravel(Y_t3))   
+
     # reg = Lasso(alpha=2e-1)
     # reg.fit(X_t3_useful, np.ravel(Y_t3))
 
@@ -309,14 +313,14 @@ for i in range(0, len(labels_target)):
     Y_val_pred = reg.predict(X_val_t3_useful).flatten()
     Y_test_tot.loc[:, label_target] = Y_test_pred
 
-    score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
-    scores_t3 = scores_t3 + [score]
-    print("Task3 score ", i, " ", label_target, " :", score)
+    #score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
+    #scores_t3 = scores_t3 + [score]
+    #print("Task3 score ", i, " ", label_target, " :", score)
 
-task3 = np.mean(scores_t3)
-print("Task3 score = ", task3)
+#task3 = np.mean(scores_t3)
+#print("Task3 score = ", task3)
 
-print("Total score = ", np.mean([task1, task2, task3]))
+#print("Total score = ", np.mean([task1, task2, task3]))
 
 # -------------------------------------
 # -----------SAVE----------------------
@@ -324,5 +328,5 @@ print("Total score = ", np.mean([task1, task2, task3]))
 
 # save into file
 Y_test_tot.insert(0, 'pid', sample['pid'])
-Y_test_tot.to_csv('../data/submission.csv', header=True, index=False, float_format='%.7f')
-Y_test_tot.to_csv('../data/submission.zip', header=True, index=False, float_format='%.7f', compression='zip')
+Y_test_tot.to_csv('submission.csv', header=True, index=False, float_format='%.7f')
+Y_test_tot.to_csv('submission.zip', header=True, index=False, float_format='%.7f', compression='zip')
