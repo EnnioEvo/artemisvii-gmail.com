@@ -61,7 +61,8 @@ features_selection = False
 threshold = 4
 remove_outliers = True
 shuffle = True
-improve_kernels = False
+classifier = 'RF' #choose between 'linear', 'kernel' and 'RF'
+submit = True
 
 
 # ---------------------------------------------------------
@@ -92,12 +93,17 @@ if shuffle:
     train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0, train_labels.shape[0], 1))
 
 
-def build_set(selected_features, train_size):
+def build_set(selected_features, train_size, submit):
     # Definition of test and val data size:
     # task 1
-    X = train_features.loc[0:train_size - 1, selected_features]
-    X_val = train_features.loc[train_size:, selected_features]
-    X_test = test_features[selected_features]
+    if submit:
+        X = train_features.loc[:, selected_features]
+        X_val = train_features.loc[train_size:, selected_features]
+        X_test = test_features[selected_features]
+    else:
+        X = train_features.loc[0:train_size - 1, selected_features]
+        X_val = train_features.loc[train_size:, selected_features]
+        X_test = test_features[selected_features]
 
     # Standardize the data
     X = (X - np.mean(X, 0)) / np.std(X, 0)
@@ -119,7 +125,7 @@ selected_features_t1 = standard_features + dummy_tests
 if use_diff:
     selected_features_t1 = selected_features_t1 + diff_features
 # selected_features_t2 = vital_signs + diff_features
-X_t1, X_val_t1, X_test_t1 = build_set(selected_features_t1, train_size)
+X_t1, X_val_t1, X_test_t1 = build_set(selected_features_t1, train_size, submit)
 
 # Variable for storing prediction
 Y_test_tot = pd.DataFrame(np.zeros([X_test_t1.shape[0], len(all_labels)]),
@@ -136,6 +142,10 @@ for i in range(0, len(labels_target)):
     label_target = labels_target[i]
     Y_t1 = train_labels[label_target].iloc[0:train_size]
     Y_val_t1 = train_labels[label_target].iloc[train_size:]
+
+    if submit:
+        Y_t1 = train_labels[label_target].iloc[:]
+        Y_val_t1 = train_labels[label_target].iloc[train_size:]
 
     if features_selection:
         usefulness_column = stored_usefulness_matrix_t1[label_target].sort_values(ascending=False)
@@ -157,25 +167,30 @@ for i in range(0, len(labels_target)):
 
     # fit
 
-    if not improve_kernels or best_kernels.at[label_target, 'kernel'] == 'poly1':
-        #clf = svm.LinearSVC(C=1e-3, tol=1e-2, class_weight='balanced', verbose=0)
-        clf = RandomForestClassifier(n_estimators=1000, class_weight="balanced_subsample")
-    else:
+    if classifier == 'linear' or (classifier == 'kernel'and best_kernels.at[label_target, 'kernel'] == 'poly1'):
+        clf = svm.LinearSVC(C=1e-3, tol=1e-2, class_weight='balanced', verbose=0)
+    elif classifier == 'kernel':
         kernel_dict = {'poly2': ('poly', 2), 'poly3': ('poly', 3), 'rbf': ('rbf', 0)}
         kernel, degree = kernel_dict[best_kernels.at[label_target, 'kernel']]
         C = best_kernels.at[label_target, 'C']
         clf = svm.SVC(C=C, kernel=kernel, degree=degree, tol=1e-4, class_weight='balanced', verbose=0)
+    elif classifier == 'RF':
+        clf = RandomForestClassifier(n_estimators=1000, class_weight="balanced_subsample")
+    else:
+        raise ValueError("choose between 'linear', 'classifier' and 'RF' ")
 
+    #fit
     clf.fit(X_t1_useful, Y_t1)
 
-    # predict and save into dataframe
-    # Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
-    # Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
-    # Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
-    # Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
-    #
-    Y_val_pred = (1 - clf.predict_proba(X_val_t1_useful))[:, 0]
-    Y_test_pred = (1 - clf.predict_proba(X_test_t1_useful))[:, 0]
+    #predict and save into dataframe
+    if classifier == 'linear' or 'kernel':
+        Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
+        Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+        Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
+        Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+    elif classifier == 'RF':
+        Y_val_pred = (1 - clf.predict_proba(X_val_t1_useful))[:, 0]
+        Y_test_pred = (1 - clf.predict_proba(X_test_t1_useful))[:, 0]
 
     Y_test_tot.loc[:, label_target] = Y_test_pred
 
@@ -225,6 +240,7 @@ remove_outliers = True
 shuffle = False
 threshold = 4
 improve_kernels = False
+classifier = 'RF' #choose between 'linear', and 'RF'
 
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION T3------------------------
@@ -251,7 +267,7 @@ train_size = 15000
 selected_houred_features_t3 = houred_features
 if use_diff:
     selected_houred_features_t3 = selected_houred_features_t3 + diff_features
-X_t3, X_val_t3, X_test_t3 = build_set(selected_houred_features_t3, train_size)
+X_t3, X_val_t3, X_test_t3 = build_set(selected_houred_features_t3, train_size, submit)
 
 # these dataframe will contain every prediction
 # Y_test_tot = pd.DataFrame(np.zeros([X_test_t3.shape[0], len(all_labels)]),
@@ -267,8 +283,13 @@ scores_t3 = []
 for i in range(0, len(labels_target)):
     # get the set corresponding tu the feature
     label_target = labels_target[i]
-    Y_t3 = train_labels.loc[0:train_size - 1, label_target]
-    Y_val_t3 = train_labels.loc[train_size:, label_target]
+    if submit:
+        Y_t3 = train_labels[label_target].iloc[:]
+        Y_val_t3 = train_labels[label_target].iloc[train_size:]
+    else:
+        Y_t3 = train_labels.loc[0:train_size - 1, label_target]
+        Y_val_t3 = train_labels.loc[train_size:, label_target]
+
 
     if features_selection:
         usefulness_column = stored_usefulness_matrix_t3[label_target].sort_values(ascending=False)
@@ -285,14 +306,26 @@ for i in range(0, len(labels_target)):
         X_test_t3_useful = X_test_t3
 
     # fit
-    reg = LinearRegression()
-    reg.fit(X_t3_useful, Y_t3)
-    # reg = Lasso(alpha=2e-1)
-    # reg.fit(X_t3_useful, np.ravel(Y_t3))
+    if classifier == 'linear':
+        reg = LinearRegression()
+    elif classifier == 'RF':
+        reg = RandomForestClassifier(n_estimators=1000)
+    else:
+        raise ValueError("choose between 'linear' and 'RF' ")
 
-    # predict and save into dataframe
-    Y_test_pred = reg.predict(X_test_t3_useful).flatten()
-    Y_val_pred = reg.predict(X_val_t3_useful).flatten()
+    #fit
+    reg.fit(X_t3_useful, Y_t3)
+
+    #predict
+    if classifier == 'linear':
+        Y_test_pred = reg.predict(X_test_t3_useful).flatten()
+        Y_val_pred = reg.predict(X_val_t3_useful).flatten()
+    elif classifier == 'RF':
+        Y_val_pred = reg.predict_proba(X_val_t3_useful)[:, 0]
+        Y_test_pred = reg.predict_proba(X_test_t3_useful)[:, 0]
+
+    #save into dataframe
+
     Y_test_tot.loc[:, label_target] = Y_test_pred
 
     score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')

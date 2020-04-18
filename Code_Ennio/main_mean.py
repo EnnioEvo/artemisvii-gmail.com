@@ -168,8 +168,8 @@ for i in range(0, len(labels_target)):
     # fit
 
     if not improve_kernels or best_kernels.at[label_target, 'kernel'] == 'poly1':
-        #clf = svm.LinearSVC(C=1e-3, tol=1e-2, class_weight='balanced', verbose=0)
-        clf = RandomForestClassifier(n_estimators=1000, class_weight="balanced_subsample")
+        clf = svm.LinearSVC(C=1e-3, tol=1e-2, class_weight='balanced', verbose=0)
+        #clf = RandomForestClassifier(n_estimators=1000, class_weight="balanced_subsample")
     else:
         kernel_dict = {'poly2': ('poly', 2), 'poly3': ('poly', 3), 'rbf': ('rbf', 0)}
         kernel, degree = kernel_dict[best_kernels.at[label_target, 'kernel']]
@@ -179,14 +179,14 @@ for i in range(0, len(labels_target)):
     clf.fit(X_t1_useful, Y_t1)
     # clf.fit(X_train, np.ravel(Y_train))
 
-    # # predict and save into dataframe
-    # Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
-    # Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
-    # Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
-    # Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
-
-    Y_val_pred = (1 - clf.predict_proba(X_val_t1_useful) )[:, 0]
-    Y_test_pred = (1 - clf.predict_proba(X_test_t1_useful) )[:, 0]
+    # predict and save into dataframe
+    Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
+    Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+    Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
+    Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+    #
+    # Y_val_pred = (1 - clf.predict_proba(X_val_t1_useful) )[:, 0]
+    # Y_test_pred = (1 - clf.predict_proba(X_test_t1_useful) )[:, 0]
 
     Y_val_tot.loc[:, label_target] = Y_val_pred
     Y_test_tot.loc[:, label_target] = Y_test_pred
