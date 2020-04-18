@@ -4,9 +4,13 @@ import sklearn.metrics as skmetrics
 from sklearn import svm
 from sklearn import linear_model
 from sklearn.linear_model import LinearRegression
-from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
+from sklearn.ensemble import BaggingClassifier
 
+import tensorflow as tf
+from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, BatchNormalization, Dense,Activation
+from tensorflow.keras.optimizers import Adadelta
+from tensorflow.keras.losses import binary_crossentropy
 
 np.random.seed(seed=397)
 # from sklearn.metrics import classification_report, confusion_matrix
@@ -16,6 +20,11 @@ np.random.seed(seed=397)
 # ---------------------------------------------------------
 
 # cleaned data import:
+url = 'https://github.com/EnnioEvo/task2/blob/master/data/train_features_clean_all.zip?raw=true'
+train_features_NN = pd.read_csv(url, compression='zip', header=0, sep=',', quotechar='"')
+url_labels = 'https://raw.githubusercontent.com/EnnioEvo/task2/master/Code_Alberto/data/train_labels.csv'
+train_labels_NN = pd.read_csv(url_labels)
+
 train_features = pd.read_csv("../data/train_features_clean_wmean_diff.csv")
 test_features = pd.read_csv("../data/test_features_clean_wmean_diff.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
@@ -105,6 +114,7 @@ if use_diff:
     selected_features_t1 = selected_features_t1 + diff_features
 #selected_features_t2 = vital_signs + diff_features
 X_t1, X_val_t1, X_test_t1 = build_set(selected_features_t1, train_size, submit)
+X_t2, X_val_t2, X_test_t2 = build_set(selected_features_t1, train_size, submit)
 
 # task3
 train_size = int(train_features.shape[0] * 0.8)
@@ -120,7 +130,7 @@ Y_val_tot = pd.DataFrame(np.zeros([X_val_t3.shape[0], len(all_labels)]), columns
 # ------------------- TRAINING TASK 1 --------------------
 # ---------------------------------------------------------
 
-labels_target = labels_tests + ['LABEL_Sepsis']
+labels_target = labels_tests
 scores_t1 = []
 for i in range(0, len(labels_target)):
     label_target = labels_target[i]
@@ -155,15 +165,17 @@ for i in range(0, len(labels_target)):
         X_val_t1_useful = X_val_t1
         X_test_t1_useful = X_test_t1
 
+
     # fit
-    clf = svm.LinearSVC(C=10e-4, class_weight='balanced', tol=10e-3, verbose=0)
-    # clf = svm.SVC(C=10e-4, class_weight='balanced', tol=10e-3, verbose=0, kernel='rbf')
+    # clf = svm.LinearSVC(C=10e-4, class_weight='balanced', tol=10e-3, verbose=0)
+    clf = svm.SVC(C=0.1, kernel='rbf', tol=0.0001)
     clf.fit(X_t1_useful, Y_t1)
 
     # predict and save into dataframe
     Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
     Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
     Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
+
     Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
     Y_val_tot.loc[:, label_target] = Y_val_pred
     Y_test_tot.loc[:, label_target] = Y_test_pred
@@ -178,6 +190,89 @@ task2 = scores_t1[-1]
 print("ROC AUC task2 score ", task2)
 
 # usefulness_matrix.to_csv('../data/usefulness_matrix.csv', header=True, index=True, float_format='%.7f')
+
+# --------------------------------------------------------
+# ------------------- TRAINING TASK 2 --------------------
+# ---------------------------------------------------------
+scaler = preprocessing.StandardScaler().fit(np.array(train_features_NN))
+X = scaler.transform(np.array(train_features_NN))
+X_test = scaler.transform(np.array(test_features_NN))
+
+N_patients_train = np.array(X.shape[0]/12).astype(int)
+N_patients_test = np.array(X_test.shape[0]/12).astype(int)
+
+train_size = 15000
+Y_t2 = train_labels_NN[labels_sepsis].iloc[0:train_size]
+Y_val_t2 = train_labels_NN[labels_sepsis].iloc[train_size:]
+
+X = np.array(X).reshape((N_patients_train, 12, X.shape[1], 1))
+X_test = np.array(X_test).reshape((N_patients_test, 12, X_test.shape[1], 1))
+
+print("train_set shape: ", X.shape)
+print("test_set shape: ", X_test.shape)
+
+# CNet parameters:
+epochs_t1 = 50
+input_shape =(12, X.shape[2],1)
+
+model_t1 = tf.keras.models.Sequential()
+
+model_t1.add(Conv2D(32, 
+                    kernel_size=(2,2),
+                    input_shape=input_shape, 
+                    ))
+
+model_t1.add(BatchNormalization())
+model_t1.add(Activation('relu'))
+model_t1.add(MaxPooling2D(pool_size=(2,2)))
+
+
+model_t1.add(Conv2D(64, 
+                    kernel_size=(2,2),
+                    input_shape=input_shape 
+                    ))
+
+model_t1.add(BatchNormalization())
+model_t1.add(Activation('relu'))
+model_t1.add(MaxPooling2D(pool_size=(2,2)))
+
+model_t1.add(Conv2D(128, 
+                    kernel_size=(2,8),
+                    input_shape=input_shape 
+                    ))
+
+model_t1.add(Flatten())
+
+model_t1.add(BatchNormalization())
+model_t1.add(Dense(500, activation='relu'))
+model_t1.add(Dropout(0.5))
+
+model_t1.add(Dense(1, activation='sigmoid')) 
+
+model_t1.compile(optimizer=Adadelta(),
+                loss=binary_crossentropy
+                )
+                
+print(model_t1.summary())
+
+print("########## test ", ['LABEL_Sepsis'], " ##########")
+
+# Class_weights:
+a = Y_t1.shape[0] / (2 * np.array([Y_t1.shape[0]- np.sum(np.array(Y_t1)), np.sum(np.array(Y_t1))]))
+weights = {
+    0 : a[0],
+    1 : a[1]
+    }
+
+#Y = keras.utils.to_categorical(Y_t1)
+model_t1.fit(X, Y_t1, epochs=epochs_t1, class_weight=weights)
+
+Y_val_pred_2 = model_t1.predict(X_test) 
+print(Y_val_pred)
+print(Y_val_t2)
+task2 = np.mean([skmetrics.roc_auc_score(Y_val_t2, Y_val_pred_2.flatten())])
+print("ROC AUC, test: ", test," -- task 1 score: ", task2)
+
 
 # ---------------------------------------------------------
 # ------------------- TRAINING TASK 3 --------------------
@@ -215,7 +310,8 @@ for i in range(0, len(labels_target)):
         X_test_t3_useful = X_test_t3
 
     # fit
-    reg = LinearRegression()
+    #reg = LinearRegression()
+    reg = Lasso(alpha=0.001,fit_intercept=True)
     reg.fit(X_t3_useful, Y_t3)
 
     # predict and save into dataframe
