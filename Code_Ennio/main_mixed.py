@@ -56,7 +56,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ----------------- SET PARAMETERS TASK 1------------------
 # ---------------------------------------------------------
 use_diff = True
-features_selection = True
+features_selection = False
 remove_outliers = True
 threshold = 4
 shuffle = True
