@@ -37,7 +37,7 @@ def column_dataset(dataset):
     for i in range(0, N, 12):
         X_temp = np.array([X[i, 0:2]])
         X_temp = np.array(
-            [np.concatenate( (X_temp, np.any([X[i:i + 12, 2:2 + len(dummy_tests)]], 1) * 1), axis=None )]
+            [np.concatenate( (X_temp, np.sum([X[i:i + 12, 2:2 + len(dummy_tests)]], 1) * 1), axis=None )]
         )
         for j in range(i, i + 12):
             X_temp = np.array(
@@ -53,6 +53,6 @@ print('X_train saved')
 
 X_test_columned = column_dataset(X_test)
 df_test = pd.DataFrame(X_test_columned, columns=all_features)
-df_test = df_train[reordered_features]
+df_test = df_test[reordered_features]
 df_test.to_csv('../data/test_features_clean_columned.csv', header=True, index=False)
 print('X_test saved')

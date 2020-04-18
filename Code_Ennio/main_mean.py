@@ -7,7 +7,7 @@ from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
 
-np.random.seed(seed=333)
+np.random.seed(seed=377)
 # from sklearn.metrics import classification_report, confusion_matrix
 
 # ---------------------------------------------------------
@@ -19,8 +19,8 @@ train_features = pd.read_csv("../data/train_features_clean_wmean_2_diff.csv")
 test_features = pd.read_csv("../data/test_features_clean_wmean_2_diff.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 sample = pd.read_csv("../sample.csv")
-stored_usefulness_matrix_t1 = pd.read_csv("../data/feature_selection/usefulness_matrix_t1_sum_backup.csv", index_col=0)
-stored_usefulness_matrix_t3 = pd.read_csv("../data/feature_selection/usefulness_matrix_t3_sum_backup.csv", index_col=0)
+stored_usefulness_matrix_t1 = pd.read_csv("../data/feature_selection/usefulness_matrix_t1_sum.csv", index_col=0)
+stored_usefulness_matrix_t3 = pd.read_csv("../data/feature_selection/usefulness_matrix_t3_sum.csv", index_col=0)
 best_kernels = pd.read_csv("../data/best_kernels.csv", index_col=0)
 
 # features
@@ -55,12 +55,12 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS ------------------------
 # ---------------------------------------------------------
-use_diff = False
+use_diff = True
 features_selection = True
 remove_outliers = True
 threshold = 4
 shuffle = True
-improve_kernels = True
+improve_kernels = False
 
 
 # ---------------------------------------------------------
@@ -151,7 +151,7 @@ for i in range(0, len(labels_target)):
         useful_features_mask = np.array(usefulness_column) >= threshold
         useful_features = [feature for feature, mask in zip(usefulness_column.index, useful_features_mask) if mask]
         useful_features_augmented = sum(
-            [[feature, 'dummy_' + feature] for feature in useful_features if feature in tests], []) \
+            [[test, 'dummy_' + test] for test in useful_features if test in tests], []) \
                                     + [feature for feature in useful_features if feature in vital_signs + diff_features] \
             # + sum([sum(
         #     [[feature + suffix] for feature in useful_features if feature in vital_signs],

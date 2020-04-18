@@ -28,6 +28,7 @@ train_clean_all = pd.read_csv("../data/train_features_clean_all.csv", index_col=
 train_clean_mean = pd.read_csv("../data/train_features_clean_mean.csv", index_col=0)
 train_clean_wmean = pd.read_csv("../data/train_features_clean_wmean.csv", index_col=0)
 train_clean_wmean_2 = pd.read_csv("../data/train_features_clean_wmean_2.csv", index_col=0)
+train_clean_columned_diff = pd.read_csv("../data/train_features_clean_columned_diff.csv", index_col=0)
 stored_usefulness_matrix_t1 = pd.read_csv("../data/feature_selection/usefulness_matrix_t1_sum.csv", index_col=0)
 stored_usefulness_matrix_t3 = pd.read_csv("../data/feature_selection/usefulness_matrix_t3_sum.csv", index_col=0)
 test_features_raw = pd.read_csv("../data/test_features.csv")

@@ -51,7 +51,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS ------------------------
 # ---------------------------------------------------------
-epochs = 1
+epochs = 3
 margin = 1e-4
 examinated_features = standard_features + diff_features
 

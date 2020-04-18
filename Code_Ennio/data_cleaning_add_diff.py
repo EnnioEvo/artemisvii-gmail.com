@@ -6,8 +6,8 @@ import pandas as pd
 # ---------------------------------------------------------
 train_features_all = pd.read_csv("../data/train_features_clean_all.csv")
 test_features_all = pd.read_csv("../data/test_features_clean_all.csv")
-train_features = pd.read_csv("../data/train_features_clean_wmean_2.csv")
-test_features = pd.read_csv("../data/test_features_clean_wmean_2.csv")
+train_features = pd.read_csv("../data/train_features_clean_columned.csv")
+test_features = pd.read_csv("../data/test_features_clean_columned.csv")
 
 patient_characteristics = ["pid", "Age"]  # TIME VARIABLE IS EXCLUDED
 vital_signs = ["Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate", 'Temp']
@@ -69,5 +69,5 @@ def fill_diff_features(dataset, dataset_all):
 train_features_diff = fill_diff_features(train_features, train_features_all)
 test_features_diff = fill_diff_features(test_features, test_features_all)
 
-train_features_diff.to_csv('../data/train_features_clean_wmean_2_diff.csv', header=True, index=False)
-test_features_diff.to_csv('../data/test_features_clean_wmean_2_diff.csv', header=True, index=False)
+train_features_diff.to_csv('../data/train_features_clean_columned_diff.csv', header=True, index=False)
+test_features_diff.to_csv('../data/test_features_clean_columned_diff.csv', header=True, index=False)
