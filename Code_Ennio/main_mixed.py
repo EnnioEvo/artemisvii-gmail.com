@@ -3,7 +3,7 @@ import numpy as np
 import sklearn.metrics as skmetrics
 from sklearn import svm
 from sklearn import linear_model
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
@@ -61,7 +61,7 @@ features_selection = False
 threshold = 4
 remove_outliers = True
 shuffle = True
-classifier = 'RF' #choose between 'linear', 'kernel' and 'RF'
+classifier = 'linear' #choose between 'linear', 'kernel' and 'RF'
 submit = True
 
 
@@ -175,7 +175,7 @@ for i in range(0, len(labels_target)):
         C = best_kernels.at[label_target, 'C']
         clf = svm.SVC(C=C, kernel=kernel, degree=degree, tol=1e-4, class_weight='balanced', verbose=0)
     elif classifier == 'RF':
-        clf = RandomForestClassifier(n_estimators=1000, class_weight="balanced_subsample")
+        clf = RandomForestClassifier(n_estimators=2000, class_weight="balanced_subsample")
     else:
         raise ValueError("choose between 'linear', 'classifier' and 'RF' ")
 
@@ -183,7 +183,7 @@ for i in range(0, len(labels_target)):
     clf.fit(X_t1_useful, Y_t1)
 
     #predict and save into dataframe
-    if classifier == 'linear' or 'kernel':
+    if classifier == 'linear' or classifier =='kernel':
         Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
         Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
         Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
@@ -240,7 +240,7 @@ remove_outliers = True
 shuffle = False
 threshold = 4
 improve_kernels = False
-classifier = 'RF' #choose between 'linear', and 'RF'
+classifier = 'linear' #choose between 'linear', and 'RF'
 
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION T3------------------------
@@ -309,12 +309,12 @@ for i in range(0, len(labels_target)):
     if classifier == 'linear':
         reg = LinearRegression()
     elif classifier == 'RF':
-        reg = RandomForestClassifier(n_estimators=1000)
+        reg = RandomForestRegressor(n_estimators=1000)
     else:
         raise ValueError("choose between 'linear' and 'RF' ")
 
     #fit
-    reg.fit(X_t3_useful, Y_t3)
+    reg.fit(X_t3_useful, np.ravel(Y_t3))
 
     #predict
     if classifier == 'linear':
