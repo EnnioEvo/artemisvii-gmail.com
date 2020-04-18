@@ -3,6 +3,7 @@ import numpy as np
 import sklearn.metrics as skmetrics
 from sklearn import svm
 from sklearn import linear_model
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
@@ -56,9 +57,9 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ----------------- SET PARAMETERS ------------------------
 # ---------------------------------------------------------
 use_diff = True
-features_selection = True
-remove_outliers = True
+features_selection = False
 threshold = 4
+remove_outliers = True
 shuffle = True
 improve_kernels = False
 
@@ -167,7 +168,8 @@ for i in range(0, len(labels_target)):
     # fit
 
     if not improve_kernels or best_kernels.at[label_target, 'kernel'] == 'poly1':
-        clf = svm.LinearSVC(C=1e-3, tol=1e-2, class_weight='balanced', verbose=0)
+        #clf = svm.LinearSVC(C=1e-3, tol=1e-2, class_weight='balanced', verbose=0)
+        clf = RandomForestClassifier(n_estimators=1000, class_weight="balanced_subsample")
     else:
         kernel_dict = {'poly2': ('poly', 2), 'poly3': ('poly', 3), 'rbf': ('rbf', 0)}
         kernel, degree = kernel_dict[best_kernels.at[label_target, 'kernel']]
@@ -175,12 +177,17 @@ for i in range(0, len(labels_target)):
         clf = svm.SVC(C=C, kernel=kernel, degree=degree, tol=1e-4, class_weight='balanced', verbose=0)
 
     clf.fit(X_t1_useful, Y_t1)
+    # clf.fit(X_train, np.ravel(Y_train))
 
-    # predict and save into dataframe
-    Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
-    Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
-    Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
-    Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+    # # predict and save into dataframe
+    # Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
+    # Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+    # Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
+    # Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+
+    Y_val_pred = (1 - clf.predict_proba(X_val_t1_useful) )[:, 0]
+    Y_test_pred = (1 - clf.predict_proba(X_test_t1_useful) )[:, 0]
+
     Y_val_tot.loc[:, label_target] = Y_val_pred
     Y_test_tot.loc[:, label_target] = Y_test_pred
 

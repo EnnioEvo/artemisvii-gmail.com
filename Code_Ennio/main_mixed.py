@@ -3,6 +3,7 @@ import numpy as np
 import sklearn.metrics as skmetrics
 from sklearn import svm
 from sklearn import linear_model
+from sklearn.ensemble import RandomForestClassifier
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
@@ -57,10 +58,10 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 use_diff = True
 features_selection = False
-remove_outliers = True
 threshold = 4
+remove_outliers = True
 shuffle = True
-improve_kernels = True
+improve_kernels = False
 
 
 # ---------------------------------------------------------
@@ -120,7 +121,6 @@ if use_diff:
 # selected_features_t2 = vital_signs + diff_features
 X_t1, X_val_t1, X_test_t1 = build_set(selected_features_t1, train_size)
 
-
 # Variable for storing prediction
 Y_test_tot = pd.DataFrame(np.zeros([X_test_t1.shape[0], len(all_labels)]),
                           columns=all_labels)  # predictions for test set
@@ -158,7 +158,8 @@ for i in range(0, len(labels_target)):
     # fit
 
     if not improve_kernels or best_kernels.at[label_target, 'kernel'] == 'poly1':
-        clf = svm.LinearSVC(C=1e-3, tol=1e-2, class_weight='balanced', verbose=0)
+        #clf = svm.LinearSVC(C=1e-3, tol=1e-2, class_weight='balanced', verbose=0)
+        clf = RandomForestClassifier(n_estimators=1000, class_weight="balanced_subsample")
     else:
         kernel_dict = {'poly2': ('poly', 2), 'poly3': ('poly', 3), 'rbf': ('rbf', 0)}
         kernel, degree = kernel_dict[best_kernels.at[label_target, 'kernel']]
@@ -168,10 +169,14 @@ for i in range(0, len(labels_target)):
     clf.fit(X_t1_useful, Y_t1)
 
     # predict and save into dataframe
-    Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
-    Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
-    Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
-    Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+    # Y_temp = np.array([clf.decision_function(X_val_t1_useful)])
+    # Y_val_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+    # Y_temp = np.array([clf.decision_function(X_test_t1_useful)])
+    # Y_test_pred = (1 / (1 + np.exp(-Y_temp))).flatten()
+    #
+    Y_val_pred = (1 - clf.predict_proba(X_val_t1_useful))[:, 0]
+    Y_test_pred = (1 - clf.predict_proba(X_test_t1_useful))[:, 0]
+
     Y_test_tot.loc[:, label_target] = Y_test_pred
 
     score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
@@ -183,10 +188,9 @@ print("ROC AUC task1 score  ", task1)
 task2 = scores_t1[-1]
 print("ROC AUC task2 score ", task2)
 
-
-#-------------------------------------
-#---------- BEGIN MAIN_ALL -----------
-#-------------------------------------
+# -------------------------------------
+# ---------- BEGIN MAIN_ALL -----------
+# -------------------------------------
 
 
 # ---------------------------------------------------------
@@ -221,7 +225,6 @@ remove_outliers = True
 shuffle = False
 threshold = 4
 improve_kernels = False
-
 
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION T3------------------------
@@ -299,13 +302,11 @@ for i in range(0, len(labels_target)):
 task3 = np.mean(scores_t3)
 print("Task3 score = ", task3)
 
-
 print("Total score = ", np.mean([task1, task2, task3]))
 
-
-#-------------------------------------
-#-----------SAVE----------------------
-#-------------------------------------
+# -------------------------------------
+# -----------SAVE----------------------
+# -------------------------------------
 
 # save into file
 Y_test_tot.insert(0, 'pid', sample['pid'])
