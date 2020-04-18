@@ -56,13 +56,13 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS TASK 1------------------
 # ---------------------------------------------------------
+classifier = 'RF' #choose between 'linear', 'kernel' and 'RF'
+submit = True
 use_diff = True
 features_selection = False
 threshold = 4
 remove_outliers = True
 shuffle = True
-classifier = 'linear' #choose between 'linear', 'kernel' and 'RF'
-submit = True
 
 
 # ---------------------------------------------------------
@@ -97,12 +97,12 @@ def build_set(selected_features, train_size, submit):
     # Definition of test and val data size:
     # task 1
     if submit:
-        X = train_features.loc[:, selected_features]
-        X_val = train_features.loc[train_size:, selected_features]
+        X = train_features[selected_features].iloc[:]
+        X_val = train_features[selected_features].iloc[train_size:]
         X_test = test_features[selected_features]
     else:
-        X = train_features.loc[0:train_size - 1, selected_features]
-        X_val = train_features.loc[train_size:, selected_features]
+        X = train_features[selected_features].iloc[0:train_size - 1]
+        X_val = train_features[selected_features].iloc[train_size:]
         X_test = test_features[selected_features]
 
     # Standardize the data
@@ -131,7 +131,7 @@ X_t1, X_val_t1, X_test_t1 = build_set(selected_features_t1, train_size, submit)
 Y_test_tot = pd.DataFrame(np.zeros([X_test_t1.shape[0], len(all_labels)]),
                           columns=all_labels)  # predictions for test set
 Y_val_tot = pd.DataFrame(np.zeros([X_val_t1.shape[0], len(all_labels)]), columns=all_labels)  # predictions for val set
-
+Y_test_tot.insert(0, 'pid', sample['pid'])
 # --------------------------------------------------------
 # ------------------- TRAINING TASK 1 --------------------
 # ---------------------------------------------------------
@@ -175,7 +175,7 @@ for i in range(0, len(labels_target)):
         C = best_kernels.at[label_target, 'C']
         clf = svm.SVC(C=C, kernel=kernel, degree=degree, tol=1e-4, class_weight='balanced', verbose=0)
     elif classifier == 'RF':
-        clf = RandomForestClassifier(n_estimators=2000, class_weight="balanced_subsample")
+        clf = RandomForestClassifier(n_estimators=3000, class_weight="balanced_subsample")
     else:
         raise ValueError("choose between 'linear', 'classifier' and 'RF' ")
 
@@ -234,13 +234,12 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS T3 ------------------------
 # ---------------------------------------------------------
+regressor = 'linear' #choose between 'linear', and 'RF'
 use_diff = True
 features_selection = True
 remove_outliers = True
 shuffle = False
 threshold = 4
-improve_kernels = False
-classifier = 'linear' #choose between 'linear', and 'RF'
 
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION T3------------------------
@@ -263,15 +262,15 @@ if shuffle:
     train_labels = train_labels.reindex(rd_permutation).set_index(np.arange(0, train_labels.shape[0], 1))
 
 # task3
-train_size = 15000
 selected_houred_features_t3 = houred_features
 if use_diff:
     selected_houred_features_t3 = selected_houred_features_t3 + diff_features
 X_t3, X_val_t3, X_test_t3 = build_set(selected_houred_features_t3, train_size, submit)
 
-# these dataframe will contain every prediction
-# Y_test_tot = pd.DataFrame(np.zeros([X_test_t3.shape[0], len(all_labels)]),
-#                           columns=all_labels)  # predictions for test set
+
+
+Y_test_tot.to_csv('../data/submission.csv', header=True, index=False, float_format='%.7f')
+Y_test_tot.to_csv('../data/submission.zip', header=True, index=False, float_format='%.7f', compression='zip')
 
 # ---------------------------------------------------------
 # ------------------- TRAINING TASK 3 --------------------
@@ -287,9 +286,8 @@ for i in range(0, len(labels_target)):
         Y_t3 = train_labels[label_target].iloc[:]
         Y_val_t3 = train_labels[label_target].iloc[train_size:]
     else:
-        Y_t3 = train_labels.loc[0:train_size - 1, label_target]
-        Y_val_t3 = train_labels.loc[train_size:, label_target]
-
+        Y_t3 = train_labels[label_target].iloc[0:train_size]
+        Y_val_t3 = train_labels[label_target].iloc[train_size:]
 
     if features_selection:
         usefulness_column = stored_usefulness_matrix_t3[label_target].sort_values(ascending=False)
@@ -306,9 +304,9 @@ for i in range(0, len(labels_target)):
         X_test_t3_useful = X_test_t3
 
     # fit
-    if classifier == 'linear':
+    if regressor == 'linear':
         reg = LinearRegression()
-    elif classifier == 'RF':
+    elif regressor == 'RF':
         reg = RandomForestRegressor(n_estimators=1000)
     else:
         raise ValueError("choose between 'linear' and 'RF' ")
@@ -317,10 +315,10 @@ for i in range(0, len(labels_target)):
     reg.fit(X_t3_useful, np.ravel(Y_t3))
 
     #predict
-    if classifier == 'linear':
+    if regressor == 'linear':
         Y_test_pred = reg.predict(X_test_t3_useful).flatten()
         Y_val_pred = reg.predict(X_val_t3_useful).flatten()
-    elif classifier == 'RF':
+    elif regressor == 'RF':
         Y_val_pred = reg.predict_proba(X_val_t3_useful)[:, 0]
         Y_test_pred = reg.predict_proba(X_test_t3_useful)[:, 0]
 
@@ -342,6 +340,5 @@ print("Total score = ", np.mean([task1, task2, task3]))
 # -------------------------------------
 
 # save into file
-Y_test_tot.insert(0, 'pid', sample['pid'])
 Y_test_tot.to_csv('../data/submission.csv', header=True, index=False, float_format='%.7f')
 Y_test_tot.to_csv('../data/submission.zip', header=True, index=False, float_format='%.7f', compression='zip')
