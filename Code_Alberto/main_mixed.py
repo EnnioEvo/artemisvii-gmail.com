@@ -301,8 +301,8 @@ for i in range(0, len(labels_target)):
     # fit
     #reg = LinearRegression()
     #reg.fit(X_t3_useful, Y_t3)
-
-    reg = RandomForestRegressor(n_estimators=500)
+    print('----- label_target -----')
+    reg = RandomForestRegressor(n_estimators=2000, verbose=1)
     reg.fit(X_t3_useful, np.ravel(Y_t3))   
 
     # reg = Lasso(alpha=2e-1)
