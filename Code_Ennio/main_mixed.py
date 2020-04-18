@@ -56,7 +56,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS TASK 1------------------
 # ---------------------------------------------------------
-classifier = 'RF' #choose between 'linear', 'kernel' and 'RF'
+classifier = 'linear' #choose between 'linear', 'kernel' and 'RF'
 submit = True
 use_diff = True
 features_selection = False
