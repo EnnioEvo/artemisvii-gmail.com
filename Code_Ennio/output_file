@@ -1,0 +1,54 @@
+Sender: LSF System <lsfadmin@eu-c7-047-13>
+Subject: Job 118704845: <python3.7 ./main_mixed.py> in cluster <euler> Done
+
+Job <python3.7 ./main_mixed.py> was submitted from host <eu-login-18> by user <efilicicc> in cluster <euler> at Sun Apr 19 12:12:02 2020
+Job was executed on host(s) <12*eu-c7-047-13>, in queue <normal.4h>, as user <efilicicc> in cluster <euler> at Sun Apr 19 12:12:33 2020
+</cluster/home/efilicicc> was used as the home directory.
+</cluster/home/efilicicc/2_task/Code_Ennio> was used as the working directory.
+Started at Sun Apr 19 12:12:33 2020
+Terminated at Sun Apr 19 12:18:04 2020
+Results reported at Sun Apr 19 12:18:04 2020
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+python3.7 ./main_mixed.py
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   2341.16 sec.
+    Max Memory :                                 7964 MB
+    Average Memory :                             3497.15 MB
+    Total Requested Memory :                     12576.00 MB
+    Delta Memory :                               4612.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                16
+    Run time :                                   351 sec.
+    Turnaround time :                            362 sec.
+
+The output (if any) follows:
+
+ROC AUC -- score  LABEL_BaseExcess  : 0.9999740453933001
+ROC AUC -- score  LABEL_Fibrinogen  : 1.0
+ROC AUC -- score  LABEL_AST  : 0.9999832822396784
+ROC AUC -- score  LABEL_Alkalinephos  : 0.9999867037947369
+ROC AUC -- score  LABEL_Bilirubin_total  : 0.9999495139936316
+ROC AUC -- score  LABEL_Lactate  : 1.0
+ROC AUC -- score  LABEL_TroponinI  : 0.9992369290433784
+ROC AUC -- score  LABEL_SaO2  : 0.9999958408561848
+ROC AUC -- score  LABEL_Bilirubin_direct  : 1.0
+ROC AUC -- score  LABEL_EtCO2  : 1.0
+ROC AUC -- score  LABEL_Sepsis  : 0.9999999999999999
+ROC AUC task1 score   0.9999126315320911
+ROC AUC task2 score  0.9999999999999999
+R2 score  LABEL_RRate  : 0.697361424426927
+R2 score  LABEL_ABPm  : 0.8095918970599476
+R2 score  LABEL_SpO2  : 0.7200935863231062
+R2 score  LABEL_Heartrate  : 0.8407466367014389
+Task3 score =  0.7669483861278549
+Total score =  0.9222870058866487
