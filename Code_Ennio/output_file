@@ -1,13 +1,50 @@
-Sender: LSF System <lsfadmin@eu-c7-047-13>
-Subject: Job 118704845: <python3.7 ./main_mixed.py> in cluster <euler> Done
+Sender: LSF System <lsfadmin@eu-c7-056-08>
+Subject: Job 118717690: <python3.7 ./main_mixed.py> in cluster <euler> Exited
 
-Job <python3.7 ./main_mixed.py> was submitted from host <eu-login-18> by user <efilicicc> in cluster <euler> at Sun Apr 19 12:12:02 2020
-Job was executed on host(s) <12*eu-c7-047-13>, in queue <normal.4h>, as user <efilicicc> in cluster <euler> at Sun Apr 19 12:12:33 2020
+Job <python3.7 ./main_mixed.py> was submitted from host <eu-login-29> by user <efilicicc> in cluster <euler> at Sun Apr 19 14:36:09 2020
+Job was executed on host(s) <16*eu-c7-056-08>, in queue <normal.4h>, as user <efilicicc> in cluster <euler> at Sun Apr 19 14:36:24 2020
 </cluster/home/efilicicc> was used as the home directory.
 </cluster/home/efilicicc/2_task/Code_Ennio> was used as the working directory.
-Started at Sun Apr 19 12:12:33 2020
-Terminated at Sun Apr 19 12:18:04 2020
-Results reported at Sun Apr 19 12:18:04 2020
+Started at Sun Apr 19 14:36:24 2020
+Terminated at Sun Apr 19 14:41:30 2020
+Results reported at Sun Apr 19 14:41:30 2020
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+python3.7 ./main_mixed.py
+------------------------------------------------------------
+
+TERM_RUNLIMIT: job killed after reaching LSF run time limit.
+Exited with exit code 140.
+
+Resource usage summary:
+
+    CPU time :                                   1749.07 sec.
+    Max Memory :                                 6892 MB
+    Average Memory :                             4661.50 MB
+    Total Requested Memory :                     16384.00 MB
+    Delta Memory :                               9492.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                16
+    Run time :                                   319 sec.
+    Turnaround time :                            321 sec.
+
+The output (if any) follows:
+
+User defined signal 2
+Sender: LSF System <lsfadmin@eu-c7-045-05>
+Subject: Job 118718937: <python3.7 ./main_mixed.py> in cluster <euler> Done
+
+Job <python3.7 ./main_mixed.py> was submitted from host <eu-login-29> by user <efilicicc> in cluster <euler> at Sun Apr 19 14:43:24 2020
+Job was executed on host(s) <16*eu-c7-045-05>, in queue <normal.4h>, as user <efilicicc> in cluster <euler> at Sun Apr 19 14:43:54 2020
+</cluster/home/efilicicc> was used as the home directory.
+</cluster/home/efilicicc/2_task/Code_Ennio> was used as the working directory.
+Started at Sun Apr 19 14:43:54 2020
+Terminated at Sun Apr 19 14:51:31 2020
+Results reported at Sun Apr 19 14:51:31 2020
 
 Your job looked like:
 
@@ -20,35 +57,89 @@ Successfully completed.
 
 Resource usage summary:
 
-    CPU time :                                   2341.16 sec.
-    Max Memory :                                 7964 MB
-    Average Memory :                             3497.15 MB
-    Total Requested Memory :                     12576.00 MB
-    Delta Memory :                               4612.00 MB
+    CPU time :                                   2345.17 sec.
+    Max Memory :                                 7056 MB
+    Average Memory :                             5173.94 MB
+    Total Requested Memory :                     16384.00 MB
+    Delta Memory :                               9328.00 MB
     Max Swap :                                   -
     Max Processes :                              4
     Max Threads :                                16
-    Run time :                                   351 sec.
-    Turnaround time :                            362 sec.
+    Run time :                                   484 sec.
+    Turnaround time :                            487 sec.
 
 The output (if any) follows:
 
-ROC AUC -- score  LABEL_BaseExcess  : 0.9999740453933001
+ROC AUC -- score  LABEL_BaseExcess  : 0.921176793071203
+ROC AUC -- score  LABEL_Fibrinogen  : 0.8324759199459645
+ROC AUC -- score  LABEL_AST  : 0.7720017219293132
+ROC AUC -- score  LABEL_Alkalinephos  : 0.7760648888584976
+ROC AUC -- score  LABEL_Bilirubin_total  : 0.7732124601977544
+ROC AUC -- score  LABEL_Lactate  : 0.8140837070038246
+ROC AUC -- score  LABEL_TroponinI  : 0.8360474719908072
+ROC AUC -- score  LABEL_SaO2  : 0.8386164857647065
+ROC AUC -- score  LABEL_Bilirubin_direct  : 0.8219043305215635
+ROC AUC -- score  LABEL_EtCO2  : 0.891966762619043
+ROC AUC -- score  LABEL_Sepsis  : 0.7049012253747851
+ROC AUC task1 score   0.8277550541902678
+ROC AUC task2 score  0.7049012253747851
+R2 score  LABEL_RRate  : 0.7025466261559744
+R2 score  LABEL_ABPm  : 0.8115753567279105
+R2 score  LABEL_SpO2  : 0.7067941475736885
+R2 score  LABEL_Heartrate  : 0.8332008311865332
+Task3 score =  0.7635292404110267
+Total score =  0.7653951733253598
+Sender: LSF System <lsfadmin@eu-c7-058-15>
+Subject: Job 118720693: <python3.7 ./main_mixed.py> in cluster <euler> Done
+
+Job <python3.7 ./main_mixed.py> was submitted from host <eu-login-29> by user <efilicicc> in cluster <euler> at Sun Apr 19 14:58:46 2020
+Job was executed on host(s) <16*eu-c7-058-15>, in queue <normal.4h>, as user <efilicicc> in cluster <euler> at Sun Apr 19 14:58:54 2020
+</cluster/home/efilicicc> was used as the home directory.
+</cluster/home/efilicicc/2_task/Code_Ennio> was used as the working directory.
+Started at Sun Apr 19 14:58:54 2020
+Terminated at Sun Apr 19 15:07:19 2020
+Results reported at Sun Apr 19 15:07:19 2020
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+python3.7 ./main_mixed.py
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   2861.00 sec.
+    Max Memory :                                 7308 MB
+    Average Memory :                             4711.37 MB
+    Total Requested Memory :                     16384.00 MB
+    Delta Memory :                               9076.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                16
+    Run time :                                   505 sec.
+    Turnaround time :                            513 sec.
+
+The output (if any) follows:
+
+ROC AUC -- score  LABEL_BaseExcess  : 0.999977593145295
 ROC AUC -- score  LABEL_Fibrinogen  : 1.0
-ROC AUC -- score  LABEL_AST  : 0.9999832822396784
-ROC AUC -- score  LABEL_Alkalinephos  : 0.9999867037947369
-ROC AUC -- score  LABEL_Bilirubin_total  : 0.9999495139936316
-ROC AUC -- score  LABEL_Lactate  : 1.0
-ROC AUC -- score  LABEL_TroponinI  : 0.9992369290433784
-ROC AUC -- score  LABEL_SaO2  : 0.9999958408561848
+ROC AUC -- score  LABEL_AST  : 0.9999811925196381
+ROC AUC -- score  LABEL_Alkalinephos  : 0.9999835380315791
+ROC AUC -- score  LABEL_Bilirubin_total  : 0.9999522373051785
+ROC AUC -- score  LABEL_Lactate  : 0.9999990372418905
+ROC AUC -- score  LABEL_TroponinI  : 0.999039428325194
+ROC AUC -- score  LABEL_SaO2  : 0.9999970885993293
 ROC AUC -- score  LABEL_Bilirubin_direct  : 1.0
-ROC AUC -- score  LABEL_EtCO2  : 1.0
-ROC AUC -- score  LABEL_Sepsis  : 0.9999999999999999
-ROC AUC task1 score   0.9999126315320911
-ROC AUC task2 score  0.9999999999999999
-R2 score  LABEL_RRate  : 0.697361424426927
-R2 score  LABEL_ABPm  : 0.8095918970599476
-R2 score  LABEL_SpO2  : 0.7200935863231062
-R2 score  LABEL_Heartrate  : 0.8407466367014389
-Task3 score =  0.7669483861278549
-Total score =  0.9222870058866487
+ROC AUC -- score  LABEL_EtCO2  : 0.9999986945254927
+ROC AUC -- score  LABEL_Sepsis  : 1.0
+ROC AUC task1 score   0.9998928809693597
+ROC AUC task2 score  1.0
+R2 score  LABEL_RRate  : 0.9534721189028108
+R2 score  LABEL_ABPm  : 0.9631421549130162
+R2 score  LABEL_SpO2  : 0.9497898633233242
+R2 score  LABEL_Heartrate  : 0.969957368643199
+Task3 score =  0.9590903764455875
+Total score =  0.986327752471649

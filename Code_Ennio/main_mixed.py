@@ -57,18 +57,18 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET GENERAL PARAMETERS ----------------
 # ---------------------------------------------------------
-submit = False
+submit = True
 shuffle = True
 remove_outliers = True
-parallel = False
+parallel = True
 
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS TASK 1------------------
 # ---------------------------------------------------------
-classifier = 'linear'  # choose between 'linear', 'kernel' and 'RF'
+classifier = 'RF'  # choose between 'linear', 'kernel' and 'RF'
 use_diff = True
 features_selection = False
-threshold = 4
+threshold = -2
 
 
 # ---------------------------------------------------------
@@ -183,7 +183,7 @@ def process_target_t1(label_target):
         C = best_kernels.at[label_target, 'C']
         clf = svm.SVC(C=C, kernel=kernel, degree=degree, tol=1e-4, class_weight='balanced', verbose=0)
     elif classifier == 'RF':
-        clf = RandomForestClassifier(n_estimators=2500, class_weight="balanced_subsample")
+        clf = RandomForestClassifier(n_estimators=2700, class_weight="balanced_subsample")
     else:
         raise ValueError("choose between 'linear', 'classifier' and 'RF' ")
 
@@ -334,7 +334,7 @@ def process_target_t3(label_target):
     if regressor == 'linear':
         reg = LinearRegression()
     elif regressor == 'RF':
-        reg = RandomForestRegressor(n_estimators=300)
+        reg = RandomForestRegressor(n_estimators=330)
     else:
         raise ValueError("choose between 'linear' and 'RF' ")
 
@@ -346,8 +346,8 @@ def process_target_t3(label_target):
         Y_test_pred = reg.predict(X_test_t3_useful).flatten()
         Y_val_pred = reg.predict(X_val_t3_useful).flatten()
     elif regressor == 'RF':
-        Y_val_pred = reg.predict_proba(X_val_t3_useful)[:, 0]
-        Y_test_pred = reg.predict_proba(X_test_t3_useful)[:, 0]
+        Y_val_pred = reg.predict(X_val_t3_useful)
+        Y_test_pred = reg.predict(X_test_t3_useful)
 
     score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
 
