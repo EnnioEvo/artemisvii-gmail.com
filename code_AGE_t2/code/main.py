@@ -56,7 +56,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET GENERAL PARAMETERS ----------------
 # ---------------------------------------------------------
-submit = False
+submit = True
 shuffle = True
 remove_outliers = True
 parallel = True
@@ -64,7 +64,7 @@ parallel = True
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS TASK 1------------------
 # ---------------------------------------------------------
-classifier = 'linear'  # choose between 'linear', 'kernel' and 'RF'
+classifier = 'RF'  # choose between 'linear', 'kernel' and 'RF'
 use_diff = True
 features_selection = False
 threshold = -2
