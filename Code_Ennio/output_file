@@ -197,3 +197,111 @@ R2 score  LABEL_SpO2  : 0.7113435642211194
 R2 score  LABEL_Heartrate  : 0.836228593238157
 Task3 score =  0.7665886797411842
 Total score =  0.9221645956125064
+Sender: LSF System <lsfadmin@eu-c7-055-02>
+Subject: Job 118724784: <python3.7 ./main_mixed.py> in cluster <euler> Done
+
+Job <python3.7 ./main_mixed.py> was submitted from host <eu-login-29> by user <efilicicc> in cluster <euler> at Sun Apr 19 15:28:23 2020
+Job was executed on host(s) <16*eu-c7-055-02>, in queue <normal.4h>, as user <efilicicc> in cluster <euler> at Sun Apr 19 15:28:57 2020
+</cluster/home/efilicicc> was used as the home directory.
+</cluster/home/efilicicc/2_task/Code_Ennio> was used as the working directory.
+Started at Sun Apr 19 15:28:57 2020
+Terminated at Sun Apr 19 15:33:38 2020
+Results reported at Sun Apr 19 15:33:38 2020
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+python3.7 ./main_mixed.py
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   1993.89 sec.
+    Max Memory :                                 6584 MB
+    Average Memory :                             3707.25 MB
+    Total Requested Memory :                     16384.00 MB
+    Delta Memory :                               9800.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                16
+    Run time :                                   311 sec.
+    Turnaround time :                            315 sec.
+
+The output (if any) follows:
+
+ROC AUC -- score  LABEL_BaseExcess  : 0.9999742321170892
+ROC AUC -- score  LABEL_Fibrinogen  : 1.0
+ROC AUC -- score  LABEL_AST  : 0.9999726246674733
+ROC AUC -- score  LABEL_Alkalinephos  : 0.9999896585070176
+ROC AUC -- score  LABEL_Bilirubin_total  : 0.9999687866599631
+ROC AUC -- score  LABEL_Lactate  : 1.0
+ROC AUC -- score  LABEL_TroponinI  : 0.99905353551935
+ROC AUC -- score  LABEL_SaO2  : 0.9999975045137108
+ROC AUC -- score  LABEL_Bilirubin_direct  : 1.0
+ROC AUC -- score  LABEL_EtCO2  : 1.0
+ROC AUC -- score  LABEL_Sepsis  : 1.0
+ROC AUC task1 score   0.9998956341984604
+ROC AUC task2 score  1.0
+R2 score  LABEL_RRate  : 0.7167919922703323
+R2 score  LABEL_ABPm  : 0.7999074674884321
+R2 score  LABEL_SpO2  : 0.6714635826287038
+R2 score  LABEL_Heartrate  : 0.833363004220554
+Task3 score =  0.7553815116520055
+Total score =  0.9184257152834886
+Sender: LSF System <lsfadmin@eu-c7-048-11>
+Subject: Job 118727174: <python3.7 ./main_mixed.py> in cluster <euler> Done
+
+Job <python3.7 ./main_mixed.py> was submitted from host <eu-login-29> by user <efilicicc> in cluster <euler> at Sun Apr 19 15:45:58 2020
+Job was executed on host(s) <16*eu-c7-048-11>, in queue <normal.4h>, as user <efilicicc> in cluster <euler> at Sun Apr 19 15:46:25 2020
+</cluster/home/efilicicc> was used as the home directory.
+</cluster/home/efilicicc/2_task/Code_Ennio> was used as the working directory.
+Started at Sun Apr 19 15:46:25 2020
+Terminated at Sun Apr 19 15:51:09 2020
+Results reported at Sun Apr 19 15:51:09 2020
+
+Your job looked like:
+
+------------------------------------------------------------
+# LSBATCH: User input
+python3.7 ./main_mixed.py
+------------------------------------------------------------
+
+Successfully completed.
+
+Resource usage summary:
+
+    CPU time :                                   1999.00 sec.
+    Max Memory :                                 6786 MB
+    Average Memory :                             3068.67 MB
+    Total Requested Memory :                     16384.00 MB
+    Delta Memory :                               9598.00 MB
+    Max Swap :                                   -
+    Max Processes :                              4
+    Max Threads :                                16
+    Run time :                                   288 sec.
+    Turnaround time :                            311 sec.
+
+The output (if any) follows:
+
+ROC AUC -- score  LABEL_BaseExcess  : 0.9999757259074028
+ROC AUC -- score  LABEL_Fibrinogen  : 1.0
+ROC AUC -- score  LABEL_AST  : 0.9999880885957708
+ROC AUC -- score  LABEL_Alkalinephos  : 0.9999769954543862
+ROC AUC -- score  LABEL_Bilirubin_total  : 0.9999503519356462
+ROC AUC -- score  LABEL_Lactate  : 1.0
+ROC AUC -- score  LABEL_TroponinI  : 0.9989325556421936
+ROC AUC -- score  LABEL_SaO2  : 0.9999958408561846
+ROC AUC -- score  LABEL_Bilirubin_direct  : 1.0
+ROC AUC -- score  LABEL_EtCO2  : 1.0
+ROC AUC -- score  LABEL_Sepsis  : 1.0
+ROC AUC task1 score   0.9998819558391585
+ROC AUC task2 score  1.0
+R2 score  LABEL_RRate  : 0.7188604637646756
+R2 score  LABEL_ABPm  : 0.8153079021413009
+R2 score  LABEL_SpO2  : 0.6739320859385597
+R2 score  LABEL_Heartrate  : 0.8365292870954836
+Task3 score =  0.7611574347350049
+Total score =  0.9203464635247212

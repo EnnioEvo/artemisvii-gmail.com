@@ -183,7 +183,7 @@ def process_target_t1(label_target):
         C = best_kernels.at[label_target, 'C']
         clf = svm.SVC(C=C, kernel=kernel, degree=degree, tol=1e-4, class_weight='balanced', verbose=0)
     elif classifier == 'RF':
-        clf = RandomForestClassifier(n_estimators=2300, class_weight="balanced_subsample")
+        clf = RandomForestClassifier(n_estimators=2500, class_weight="balanced_subsample")
     else:
         raise ValueError("choose between 'linear', 'classifier' and 'RF' ")
 
@@ -244,7 +244,7 @@ train_labels = pd.read_csv("../data/train_labels.csv")
 stored_usefulness_matrix_t3 = pd.read_csv("../data/feature_selection/usefulness_matrix_t3_sum.csv", index_col=0)
 
 N_hours_test = 1
-N_hours_VS = 4
+N_hours_VS = 9
 houred_features = ['Age'] + \
                   sum([[test + str(i) for i in range(13 - N_hours_test, 13)] + ['dummy_' + test] for test in tests],
                       []) + \
@@ -267,7 +267,7 @@ threshold = -2
 # ----------------- DATA SELECTION T3------------------------
 # ---------------------------------------------------------
 if remove_outliers:
-    percentiles = _get_percentiles(train_features, 1e-2, 100 - 1e-2)
+    percentiles = _get_percentiles(train_features, 1e-3, 100 - 1e-3)
     percentiles = percentiles[
         sum([[houred_test for houred_test in houred_features if (test in houred_test and 'dummy' not in houred_test)]
              for test in tests], [])]
