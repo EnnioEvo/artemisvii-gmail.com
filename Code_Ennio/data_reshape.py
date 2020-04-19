@@ -49,10 +49,8 @@ X_train_columned = column_dataset(X_train)
 df_train = pd.DataFrame(X_train_columned, columns=all_features)
 df_train = df_train[reordered_features]
 df_train.to_csv('../data/train_features_clean_columned.csv', header=True, index=False)
-print('X_train saved')
 
 X_test_columned = column_dataset(X_test)
 df_test = pd.DataFrame(X_test_columned, columns=all_features)
 df_test = df_test[reordered_features]
 df_test.to_csv('../data/test_features_clean_columned.csv', header=True, index=False)
-print('X_test saved')

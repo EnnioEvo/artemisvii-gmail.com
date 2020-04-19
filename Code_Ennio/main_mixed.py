@@ -4,7 +4,7 @@ import sklearn.metrics as skmetrics
 from sklearn import svm
 from sklearn import linear_model
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import LinearRegression, Ridge
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
 from threading import Lock, Thread
@@ -22,7 +22,6 @@ test_features = pd.read_csv("../data/test_features_clean_wmean_2_diff.csv")
 train_labels = pd.read_csv("../data/train_labels.csv")
 sample = pd.read_csv("../sample.csv")
 stored_usefulness_matrix_t1 = pd.read_csv("../data/feature_selection/usefulness_matrix_t1_sum.csv", index_col=0)
-stored_usefulness_matrix_t3 = pd.read_csv("../data/feature_selection/usefulness_matrix_t3_sum.csv", index_col=0)
 best_kernels = pd.read_csv("../data/best_kernels.csv", index_col=0)
 
 # features
@@ -57,7 +56,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET GENERAL PARAMETERS ----------------
 # ---------------------------------------------------------
-submit = True
+submit = False
 shuffle = True
 remove_outliers = True
 parallel = True
@@ -65,7 +64,7 @@ parallel = True
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS TASK 1------------------
 # ---------------------------------------------------------
-classifier = 'RF'  # choose between 'linear', 'kernel' and 'RF'
+classifier = 'linear'  # choose between 'linear', 'kernel' and 'RF'
 use_diff = True
 features_selection = False
 threshold = -2
@@ -332,7 +331,8 @@ def process_target_t3(label_target):
 
     # fit
     if regressor == 'linear':
-        reg = LinearRegression()
+        #reg = LinearRegression()
+        reg = Ridge(alpha=1)
     elif regressor == 'RF':
         reg = RandomForestRegressor(n_estimators=330)
     else:
