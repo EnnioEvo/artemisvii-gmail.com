@@ -299,11 +299,9 @@ for i in range(0, len(labels_target)):
         X_test_t3_useful = X_test_t3
 
     # fit
-    #reg = LinearRegression()
-    #reg.fit(X_t3_useful, Y_t3)
-    print('----- label_target -----')
-    reg = RandomForestRegressor(n_estimators=2000, verbose=1)
-    reg.fit(X_t3_useful, np.ravel(Y_t3))   
+    reg = LinearRegression()
+    reg.fit(X_t3_useful, Y_t3)
+
 
     # reg = Lasso(alpha=2e-1)
     # reg.fit(X_t3_useful, np.ravel(Y_t3))
@@ -313,9 +311,9 @@ for i in range(0, len(labels_target)):
     Y_val_pred = reg.predict(X_val_t3_useful).flatten()
     Y_test_tot.loc[:, label_target] = Y_test_pred
 
-    #score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
-    #scores_t3 = scores_t3 + [score]
-    #print("Task3 score ", i, " ", label_target, " :", score)
+    score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
+    scores_t3 = scores_t3 + [score]
+    print("Task3 score ", i, " ", label_target, " :", score)
 
 #task3 = np.mean(scores_t3)
 #print("Task3 score = ", task3)
