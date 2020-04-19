@@ -331,8 +331,8 @@ def process_target_t3(label_target):
 
     # fit
     if regressor == 'linear':
-        #reg = LinearRegression()
-        reg = Ridge(alpha=1)
+        reg = LinearRegression()
+        #reg = Ridge(alpha=1)
     elif regressor == 'RF':
         reg = RandomForestRegressor(n_estimators=330)
     else:
