@@ -183,7 +183,7 @@ def process_target_t1(label_target):
         C = best_kernels.at[label_target, 'C']
         clf = svm.SVC(C=C, kernel=kernel, degree=degree, tol=1e-4, class_weight='balanced', verbose=0)
     elif classifier == 'RF':
-        clf = RandomForestClassifier(n_estimators=2700, class_weight="balanced_subsample")
+        clf = RandomForestClassifier(n_estimators=2300, class_weight="balanced_subsample")
     else:
         raise ValueError("choose between 'linear', 'classifier' and 'RF' ")
 
@@ -258,7 +258,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS T3 ------------------------
 # ---------------------------------------------------------
-regressor = 'RF'  # choose between 'linear', and 'RF'
+regressor = 'linear'  # choose between 'linear', and 'RF'
 use_diff = True
 features_selection = True
 threshold = -2
