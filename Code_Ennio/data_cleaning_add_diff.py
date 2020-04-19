@@ -12,7 +12,7 @@ def add_diff(train_path, test_path):
     train_features_all = pd.read_csv("../data/train_features_clean_all.csv")
     test_features_all = pd.read_csv("../data/test_features_clean_all.csv")
     train_features = pd.read_csv(train_path)
-    test_features = pd.read_csv(train_path)
+    test_features = pd.read_csv(test_path)
 
     patient_characteristics = ["pid", "Age"]  # TIME VARIABLE IS EXCLUDED
     vital_signs = ["Heartrate", "SpO2", "ABPs", "ABPm", "ABPd", "RRate", 'Temp']

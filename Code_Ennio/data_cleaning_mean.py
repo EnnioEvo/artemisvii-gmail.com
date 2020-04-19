@@ -76,5 +76,5 @@ def cleaning(data_set):
 train_features_clean = cleaning(train_features)
 test_features_clean = cleaning(test_features)
 
-train_features_clean.to_csv('../data/train_features_clean_wmean_2.csv', header=True, index=False)
-test_features_clean.to_csv('../data/test_features_clean_wmean_2.csv', header=True, index=False)
+train_features_clean.to_csv('../data/train_features_clean_mean.csv', header=True, index=False)
+test_features_clean.to_csv('../data/test_features_clean_mean.csv', header=True, index=False)
