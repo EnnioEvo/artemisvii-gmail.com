@@ -7,6 +7,7 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.feature_selection import RFE
 from sklearn.linear_model import Lasso
+from threading import Lock, Thread
 
 np.random.seed(seed=377)
 # from sklearn.metrics import classification_report, confusion_matrix
@@ -56,14 +57,14 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 # ----------------- SET PARAMETERS TASK 1------------------
 # ---------------------------------------------------------
-classifier = 'linear' #choose between 'linear', 'kernel' and 'RF'
+classifier = 'RF' #choose between 'linear', 'kernel' and 'RF'
 submit = True
 use_diff = True
 features_selection = False
 threshold = 4
 remove_outliers = True
 shuffle = True
-
+parallel = True
 
 # ---------------------------------------------------------
 # ----------------- DATA SELECTION ------------------------
@@ -137,15 +138,17 @@ Y_test_tot.insert(0, 'pid', sample['pid'])
 # ---------------------------------------------------------
 
 labels_target = labels_tests + ['LABEL_Sepsis']
-scores_t1 = []
-for i in range(0, len(labels_target)):
-    label_target = labels_target[i]
-    Y_t1 = train_labels[label_target].iloc[0:train_size]
-    Y_val_t1 = train_labels[label_target].iloc[train_size:]
+scores_t1 = pd.DataFrame(columns=labels_target, index=[0])
+lock = Lock()
+def process_target_t1(label_target):
 
     if submit:
         Y_t1 = train_labels[label_target].iloc[:]
         Y_val_t1 = train_labels[label_target].iloc[train_size:]
+    else:
+        Y_t1 = train_labels[label_target].iloc[0:train_size]
+        Y_val_t1 = train_labels[label_target].iloc[train_size:]
+
 
     if features_selection:
         usefulness_column = stored_usefulness_matrix_t1[label_target].sort_values(ascending=False)
@@ -192,15 +195,31 @@ for i in range(0, len(labels_target)):
         Y_val_pred = (1 - clf.predict_proba(X_val_t1_useful))[:, 0]
         Y_test_pred = (1 - clf.predict_proba(X_test_t1_useful))[:, 0]
 
+    lock.acquire()
     Y_test_tot.loc[:, label_target] = Y_test_pred
-
     score = np.mean([skmetrics.roc_auc_score(Y_val_t1, Y_val_pred)])
-    scores_t1 = scores_t1 + [score]
-    print("ROC AUC -- score ", i, " ", label_target, " :", np.float(score))
+    scores_t1[label_target] = score
+    lock.release()
+    return score
 
-task1 = sum(scores_t1[:-1]) / len(scores_t1[:-1])
+if parallel:
+    threads = []
+    for label_target in labels_target:
+        threads = threads + [Thread(target=process_target_t1, args=(label_target,), name='Thread_' + label_target)]
+        threads[-1].start()
+
+    for thread in threads:
+       thread.join()
+else:
+    for label_target in labels_target:
+        process_target_t1(label_target)
+
+for label_target in labels_target:
+    print("ROC AUC -- score ", label_target, " :", scores_t1[label_target][0])
+
+task1 = sum(scores_t1.iloc[0,:-1]) / len(scores_t1.iloc[0,:-1])
 print("ROC AUC task1 score  ", task1)
-task2 = scores_t1[-1]
+task2 = scores_t1.iloc[0,-1]
 print("ROC AUC task2 score ", task2)
 
 # -------------------------------------
@@ -236,7 +255,7 @@ test_features = test_features.drop(labels="pid", axis=1)
 # ---------------------------------------------------------
 regressor = 'linear' #choose between 'linear', and 'RF'
 use_diff = True
-features_selection = True
+features_selection = False
 remove_outliers = True
 shuffle = False
 threshold = 4
@@ -278,10 +297,11 @@ Y_test_tot.to_csv('../data/submission.zip', header=True, index=False, float_form
 
 labels_target = labels_VS_mean
 # labels_target = ['LABEL_' + select_feature for select_feature in select_features]
-scores_t3 = []
-for i in range(0, len(labels_target)):
+scores_t3 = pd.DataFrame(columns=labels_target, index=[0])
+lock = Lock()
+
+def process_target_t3(label_target):
     # get the set corresponding tu the feature
-    label_target = labels_target[i]
     if submit:
         Y_t3 = train_labels[label_target].iloc[:]
         Y_val_t3 = train_labels[label_target].iloc[train_size:]
@@ -322,15 +342,27 @@ for i in range(0, len(labels_target)):
         Y_val_pred = reg.predict_proba(X_val_t3_useful)[:, 0]
         Y_test_pred = reg.predict_proba(X_test_t3_useful)[:, 0]
 
-    #save into dataframe
-
-    Y_test_tot.loc[:, label_target] = Y_test_pred
-
     score = 0.5 + 0.5 * skmetrics.r2_score(Y_val_t3, Y_val_pred, sample_weight=None, multioutput='uniform_average')
-    scores_t3 = scores_t3 + [score]
-    print("Task3 score ", i, " ", label_target, " :", score)
 
-task3 = np.mean(scores_t3)
+    #save into dataframe
+    lock.acquire()
+    Y_test_tot.loc[:, label_target] = Y_test_pred
+    scores_t3[label_target] = score
+    lock.release()
+
+threads = []
+for label_target in labels_target:
+    threads = threads + [Thread(target=process_target_t3, args=(label_target,), name='Thread_' + label_target)]
+    threads[-1].start()
+
+for thread in threads:
+   thread.join()
+
+for label_target in labels_target:
+    print("R2 score ", label_target, " :", scores_t3[label_target][0])
+
+
+task3 = np.mean(scores_t3.iloc[0,:])
 print("Task3 score = ", task3)
 
 print("Total score = ", np.mean([task1, task2, task3]))
